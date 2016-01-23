@@ -41,11 +41,11 @@ class DatabaseHandler
 	 *  -1: wrong credentials
 	 *  -2: account not confirmed
 	 */
-	public function AuthenticateByEmail($Email, $Password) {
+	public function AuthenticateByEmail($email, $password) {
 		global $authIssueText;
 		global $mysqli;
 	
-		$sql = "SELECT UserId, UserStateId FROM User WHERE Email = '$Email' AND PasswordHash = '$Password' ";
+		$sql = "SELECT UserId, UserStateId FROM User WHERE Email = '$email' AND PasswordHash = '$password' ";
 		
 		$result = $mysqli->query($sql);
 		
@@ -63,18 +63,18 @@ class DatabaseHandler
 	function CheckAuthentication($throwException = true, $checkIfAdmin = false) {
 		// TODO: Implement "$checkIfAdmin"
 		
-		$idUser = -1;
+		$userId = -1;
 		
 		if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']))
 		{
-			$idUser = $this->AuthenticateByEmail($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+			$userId = $this->AuthenticateByEmail($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
 		}
 
-		if($idUser <= 0 && $throwException) {
+		if($userId <= 0 && $throwException) {
 			throw new RestException(401, "Unauthorized. Authentication credentials are missing or incorrect for user ".$_SERVER['PHP_AUTH_USER']);
 		}
 		
-		return $idUser;
+		return $userId;
 	}
 	
 	function CheckIfOwned($userId, $entity, $entityId, $throwException = true) {
@@ -208,11 +208,11 @@ class DatabaseHandler
 		return $jsonData;
 	}
 	
-	public function Authenticate($IdUser, $Password) {
+	public function Authenticate($userId, $password) {
 		global $authIssueText;
 		global $mysqli;
 	
-		$sql = "SELECT * FROM User WHERE Id = $IdUser AND Password = '$Password' ";
+		$sql = "SELECT * FROM User WHERE Id = $userId AND Password = '$password' ";
 		
 		$result = $mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
@@ -220,7 +220,7 @@ class DatabaseHandler
 		return ($recordsCount > 0);
 	}
 	
-	public function AppendLog($Action, $OrganizationName, $Agent = "", $UserEmail = "") {
+	public function AppendLog($Action, $OrganizationName, $agent = "", $userEmail = "") {
 		global $authIssueText;
 		global $mysqli;
 		
@@ -238,62 +238,60 @@ class DatabaseHandler
 		$location = $info['country'] . ", " . $info['continent_code'];
 		
 		// gmdate("Y m d H:i:s")
-		$sql = "INSERT INTO Log (Action, OrganizationName, Agent, UserEmail, DateTime, Ip, Location) VALUES ('$Action', '$OrganizationName', '$Agent', '$UserEmail', '".time()."', '$ip', '$location')";
+		$sql = "INSERT INTO Log (Action, OrganizationName, Agent, UserEmail, DateTime, Ip, Location) VALUES ('$Action', '$OrganizationName', '$agent', '$userEmail', '".time()."', '$ip', '$location')";
 	
 		$result = $mysqli->query($sql) or die ($authIssueText);
 	}
 	
-	public function GetRecordsCount($Table, $IdUser, $Conditions) {
-		global $authIssueText;
-		global $mysqli;
+	public function GetRecordsCount($table, $userId, $conditions) {
+		global $authIssueText, $mysqli;
 	
-		$sql = "SELECT COUNT(*) AS 'Count' FROM $Table WHERE UserId = $IdUser ";
-		$sql .= (strlen($Conditions) > 0) ? " AND $Conditions " : "";
+		$sql = "SELECT COUNT(*) AS 'Counter' FROM $table WHERE UserId = $userId ";
+		$sql .= (strlen($conditions) > 0) ? " AND $conditions " : "";
 		
 		$result = $mysqli->query($sql) or die ($authIssueText);
-		$recordsCount = mysqli_num_rows($result);
 		
-		if($recordsCount == 1 && $result != null) {
+		if($result != null) {
 			$row = mysqli_fetch_array($result);
-			
-			return $row['Count'];
+			return $row['Counter'];
 		}
 		
-		return false;
+		return 0;
 	}
 	
-	public function DeActivateRecord($Table, $IdRecord) {
-		global $authIssueText;
-		global $mysqli;
+	public function DeActivateRecord($table, $recordId) {
+		global $authIssueText, $mysqli;
 		
-		$sql  = "UPDATE $Table SET ";
-		$sql .= "  Active = 0 ";
-		$sql .= " WHERE $Table"."Id = ".$IdRecord;
+		$sql  = "UPDATE $table SET Active = 0 ";
+		$sql .= "WHERE $table"."Id = ".$recordId;
 		
 		$result = $mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;
 	}
 	
-	public function DeleteRecord($Table, $IdUser, $IdRecord) {
-		global $authIssueText;
-		global $mysqli;
+	public function DeleteRecord($table, $userId, $recordId) {
+		global $authIssueText, $mysqli;
 	
-		$sql = "DELETE FROM $Table WHERE UserId = $IdUser AND $Table"."Id = $IdRecord";
+		$sql = "DELETE FROM $table WHERE UserId = $userId AND $table"."Id = $recordId";
 		$result = $mysqli->query($sql) or die ($authIssueText);
+		
+		return $result;
 	}
 	
-	// Get last / maximum Id for the specified table	
-	public function GetLastId($Table, $UserId) {
-		global $authIssueText;
-		global $mysqli;
+	// Get last / maximum Id for the specified table
+	public function GetLastId($table, $userId) {
+		global $authIssueText, $mysqli;
 		
-		$sql = "SELECT MAX($Table"."Id) AS 'MaxId' FROM $Table WHERE UserId = $UserId";
+		$sql = "SELECT MAX($table"."Id) AS 'MaxId' FROM $table WHERE UserId = $userId";
+		
 		$result = $mysqli->query($sql) or die ($authIssueText);
+		
 		if($result != null) {
 			$row = mysqli_fetch_array($result);
 			return $row['MaxId'];
 		}
+		
 		return 0;
 	}
 }

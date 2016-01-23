@@ -50,18 +50,6 @@ class AuthorsController extends AuthorsDatabaseHandler
 	{
 		return parent::AuthorById($authorId);
 	}
-
-    /**
-     * Test Create Author
-     * 
-     * @url GET /authors/test/create
-     */
-    public function testCreate()
-	{
-		parent::CreateAuthor($_GET['Name'], $_GET['Id']);
-		$authorId = parent::GetLastId("Author", $_GET['Id']);
-		return $authorId;
-	}
 	
     /**
      * Update Author
@@ -108,23 +96,22 @@ class AuthorsController extends AuthorsDatabaseHandler
      * 
      * @url POST /author/delete/
      */
-    public function deleteAuthor() {
-		global $websiteUrl, $userUploadFolder, $userAuthorsFolder, $ThumbnailPrefix;
-	
-		$authIdUser = parent::CheckAuthentication();
+    public function deleteAuthor() {	
+		$userId = parent::CheckAuthentication();
+		$authorId = $_POST['IdAuthor'];
 		
-		$UserId = $_POST['IdUser'];
-		
-		$AuthorInEventsCount = parent::GetRecordsCount('Event', $UserId, 'AuthorId = '.$_POST['IdAuthor']);
-		$AuthorInArticlesCount = parent::GetRecordsCount('Article', $UserId, 'AuthorId = '.$_POST['IdAuthor']);
-		
-		if(($AuthorInEventsCount + $AuthorInArticlesCount) > 0) {
-			parent::DeActivateRecord('Authors', $_POST['IdAuthor']);
-		} else {
-			$Author = parent::AuthorById($_POST['IdAuthor']);
+		if(parent::CheckIfOwned($userId, "Author", $authorId) == true) {
+			$authorInEventsCount = parent::GetRecordsCount('Event', $userId, 'AuthorId = '.$authorId);
+			$authorInArticlesCount = parent::GetRecordsCount('Article', $userId, 'AuthorId = '.authorId);
 			
-			$this->unlinkRemovedAuthorImages($UserId, $Author[Image]);
-			parent::DeleteRecord('Author', $UserId, $_POST['IdAuthor']);
+			if(($authorInEventsCount + $authorInArticlesCount) > 0) {
+				parent::DeActivateRecord('Author', $authorId);
+			} else {
+				$Author = parent::AuthorById($authorId);
+				
+				$this->unlinkRemovedAuthorImages($userId, $Author[Image]);
+				parent::DeleteRecord('Author', $userId, $authorId);
+			}
 		}
 	}
 

@@ -99,14 +99,14 @@ class LocationsController extends LocationsDatabaseHandler
     public function deleteLocation() {
 		global $mysqli;
 	
-		$authIdUser = parent::CheckAuthentication();
+		$userId = parent::CheckAuthentication();
 		
-		$LocationInEventsCount = parent::GetRecordsCount('Event', $_POST['IdUser'], 'LocationId = '.$_POST['IdLocation']);
+		$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$_POST['IdLocation']);
 		
-		if($LocationInEventsCount > 0) {
+		if($locationInEventsCount > 0) {
 			parent::DeActivateRecord('Location', $_POST['IdLocation']);
 		} else {
-			parent::DeleteRecord('Location', $_POST['IdUser'], $_POST['IdLocation']);
+			parent::DeleteRecord('Location', $userId, $_POST['IdLocation']);
 		}
 	}
 }

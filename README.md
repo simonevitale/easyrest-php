@@ -30,7 +30,7 @@ script you will need to execute and some sample data (at the bottom of the file)
 You should be able now to perform a GET request like the following:
  > http://[YOUR_DOMAIN]/portal/api/v1/events?upcoming=0  
 
-This operation will show all the events in the past and in the future.
+This operation will show all the events in the past and in the future. Authentication is not required to view published events.
 
 ### Modules
 

@@ -253,15 +253,15 @@ class UsersController extends UsersDatabaseHandler
     public function changePassword() {
 		global $mysqli;
 		
-		$idUser = $_POST['IdUser'];
+		$userId = $_POST['IdUser'];
 		$password = $_POST['OldPassword'];
 		$newPassword = $_POST['NewPassword'];
 		
 		$sql  = "UPDATE User SET ";
 		$sql .= " PasswordHash = '".$newPassword."' ";
-		$sql .= " WHERE UserId = $idUser AND PasswordHash = '".$password."'";
+		$sql .= " WHERE UserId = $userId AND PasswordHash = '".$password."'";
 		
-		if($mysqli->query($sql) === TRUE) {
+		if($mysqli->query($sql) != null) {
 			return "OK";
 		} else {
 			throw new RestException(403, "Forbidden - Couldn't change the current password");

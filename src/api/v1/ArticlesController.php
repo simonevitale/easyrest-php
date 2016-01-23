@@ -35,15 +35,15 @@ class ArticlesController extends ArticlesDatabaseHandler
 	 * If authentication is provided, it show published event for the authenticated user
 	 *
      * @url GET /articles
-     * @url GET /articles/$idUser
+     * @url GET /articles/$userId
 	 */
-    public function getArticles($idUser = -1) {
+    public function getArticles($userId = -1) {
 		$authIdUser = parent::CheckAuthentication(false);
 		
 		if ($authIdUser > 0) {
 			$authenticated = true;
-			//if($idUser <= 0)
-				$idUser = $authIdUser;
+			//if($userId <= 0)
+				$userId = $authIdUser;
 		}
 		
 		$filters = array();
@@ -63,7 +63,7 @@ class ArticlesController extends ArticlesDatabaseHandler
 		if(isset($_GET['from']))  $from = $_GET['from']; else $from = -1;
 		if(isset($_GET['count'])) $count = $_GET['count']; else $count = -1;
 		
-		return parent::Articles($filters, $notFilters, $from, $count, $idUser);
+		return parent::Articles($filters, $notFilters, $from, $count, $userId);
 	}
 	
     /**
@@ -147,7 +147,7 @@ class ArticlesController extends ArticlesDatabaseHandler
 			$Article = parent::ArticleById($_POST['IdArticle']);
 			
 			$this->unlinkRemovedArticleImages($userId, $Article['Image']);
-			parent::DeleteRecord('Article', $_POST['IdUser'], $_POST['IdArticle']);
+			parent::DeleteRecord('Article', 1, $_POST['IdArticle']);
 		}
 	}
 
