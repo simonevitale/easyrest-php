@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?> 
+
+<modules>
+
+	<module name="Countries">
+		<component role="Controller" name="CountriesController">CountriesController.php</component>
+	</module>
+
+	<module name="Languages">
+		<component role="Controller" name="LanguagesController">LanguagesController.php</component>
+	</module>
+
+	<module name="Categories">
+		<component role="Controller" name="CategoriesController">CategoriesController.php</component>
+	</module>
+
+	<module name="Logs">
+		<component role="Controller" name="LogsController">LogsController.php</component>
+	</module>
+
+	<module name="Users">
+		<component role="Controller" name="UsersController">UsersController.php</component>
+	</module>
+
+	<module name="Locations">
+		<component role="Controller" name="LocationsController">LocationsController.php</component>
+	</module>
+
+	<module name="Authors">
+		<component role="Controller" name="AuthorsController">AuthorsController.php</component>
+	</module>
+
+	<module name="Articles">
+		<component role="DatabaseHandler">ArticlesDatabaseHandler.php</component>
+		<component role="Controller" name="ArticlesController">ArticlesController.php</component>
+	</module>
+
+	<module name="Events">
+		<component role="DatabaseHandler">EventsDatabaseHandler.php</component>
+		<component role="Controller" name="EventsController">EventsController.php</component>
+	</module>
+	
+</modules>

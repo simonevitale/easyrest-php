@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?> 
+
+<settings>
+	
+	<websiteUrl>[YOUR WEBSITE URL (e.g. "www.example.com")]</websiteUrl>
+	<websiteName>[YOUR WEBSITE NAME (e.g. "example")]</websiteName>
+	<websiteDomain>[YOUR WEBSITE DOMAIN (e.g. "example.com")]</websiteDomain>
+	
+	<portalFolder>portal</portalFolder>
+	<userUploadFolder>uploads</userUploadFolder>
+	<userArticlesFolder>articles</userArticlesFolder>
+	<userEventsFolder>events</userEventsFolder>
+	<userAuthorsFolder>authors</userAuthorsFolder>
+	
+	<thumbnailPrefix>thumbnail.</thumbnailPrefix>
+	
+	<defaultRoleId>1</defaultRoleId>
+	
+</settings>
