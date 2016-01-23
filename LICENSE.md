@@ -1,1 +1,0 @@
-# easyrest-php

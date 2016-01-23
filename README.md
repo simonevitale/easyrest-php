@@ -15,18 +15,26 @@ REST, Php, API, MySql, Back-end, CMS, Controller, Module, Object Oriented
 
 ### Installation
 
- -  Database - Once forked the repository you will need to set up the MySql database. The "sql" folder contains the SQL
-script you will need to execute
- -  Extract the src in your desired folder (e.g. as default "portal") and upload it in your server. You can set this folder through the *Settings.xml* file.
+ - Database - Once forked the repository you will need to set up the MySql database. The "sql" folder contains the SQL
+script you will need to execute and some sample data (at the bottom of the file).
+ - Extract "src" in your desired folder (e.g. as default "portal") and upload it to your server. You can set this folder through the *Settings.xml* file.
+ - Set up and check your settings file, as described below.
 
 ##### Settings
  - settings/Database.xml - It contains your database settings: it is the first thing you want to set up. The object Database (Database.php) reads this file and implements a singleton to centralize the databsase requests.
  - *settings/Settings.xml* - "Variables" (folders, URLs and more) globally useful to not be hard coded.
  - *settings/Modules.xml* - It defines the modules to dynamically load.
+ 
+##### First try
+
+You should be able now to perform a GET request like the following:
+ > http://[YOUR_DOMAIN]/portal/api/v1/events?upcoming=0  
+
+This operation will show all the events in the past and in the future.
 
 ### Modules
 
-So far the following modules have been implemented:
+The following modules have been so far implemented:
 
 * Language
 * Category
