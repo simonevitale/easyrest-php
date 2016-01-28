@@ -82,7 +82,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 		if(strlen($orderBy) > 0)
 			$sql .= "ORDER BY $orderBy ";
 		else
-			$sql .= "ORDER BY EventId DESC, DateTime ASC ";
+			$sql .= "ORDER BY DateTime ASC, EventId DESC ";
 		
 		if($from != -1 && $count != -1)
 			$sql .= " LIMIT $from, $count \n";

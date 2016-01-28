@@ -62,7 +62,7 @@ class EventsController extends EventsDatabaseHandler
 		if(isset($_GET['count'])) $count = $_GET['count']; else $count = -1;
 		if(isset($_GET['year']))  $year = $_GET['year']; else $year = null;
 		
-		return parent::Events($filters, $notFilters, $from, $count, $idUser, "", $upcoming, $year);
+		return parent::Events($filters, $notFilters, $from, $count, $idUser, "EventId DESC", $upcoming, $year);
 	}
 
     /**

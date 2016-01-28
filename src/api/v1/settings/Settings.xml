@@ -5,6 +5,7 @@
 	<websiteUrl>[YOUR WEBSITE URL (e.g. "www.example.com")]</websiteUrl>
 	<websiteName>[YOUR WEBSITE NAME (e.g. "example")]</websiteName>
 	<websiteDomain>[YOUR WEBSITE DOMAIN (e.g. "example.com")]</websiteDomain>
+	<supportEmail>[YOUR SUPPORT EMAIL (e.g. "support@example.com")]</supportEmail>
 	
 	<portalFolder>portal</portalFolder>
 	<userUploadFolder>uploads</userUploadFolder>

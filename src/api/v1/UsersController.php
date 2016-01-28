@@ -38,10 +38,10 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/signup/
      */
     public function signUp() {
-		global $messages, $authIssueText, $eMailSendFrom;
-		global $mysqli;
+		global $messages, $authIssueText, $mysqli;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
+		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
 		
 		$email    = $_POST['email'];
 		$password = $_POST['password'];
@@ -69,15 +69,17 @@ class UsersController extends UsersDatabaseHandler
 				$newUserMessage = $messages[$language]["createUserMessage"];
 				$newUserMessage = str_replace("<<SendTo>>", $email, $newUserMessage);
 				$newUserMessage = str_replace("<<RegistrationCode>>", $registrationCode, $newUserMessage);
-				
-				// In case any of our lines are larger than 70 characters, we should use wordwrap()
-				$newUserMessage = wordwrap($newUserMessage, 70, "\r\n");
 						
-				$headers =  'From: ' . $eMailSendFrom.'' . "\r\n" .
-							'Reply-To: ' . $eMailSendFrom . "\r\n" .
-							'X-Mailer: PHP/' . phpversion();
+				$headers =  "From: $websiteName <".$eMailSendFrom.">\r\n" .
+							"Reply-To: $websiteName <".$eMailSendFrom.">\r\n" .
+							"Return-Path: $websiteName <".$eMailSendFrom.">\r\n" .
+							"Organization: $websiteName\r\n" .
+							"MIME-Version: 1.0\r\n" .
+							"Content-type: text/plain; charset=iso-8859-1\r\n" .
+							"X-Priority: 3\r\n" .
+							"X-Mailer: PHP/" . phpversion();
 							
-				mail($email, "SquizMind Account", $newUserMessage, $headers);
+				mail($email, "$websiteName Account", $newUserMessage, $headers);
 				
 				return "OK";
 			}
@@ -149,7 +151,10 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/forgotpassword/
      */
     public function forgotPassword() {	
-		global $mysqli, $eMailSendFrom, $messages;
+		global $mysqli, $messages;
+		
+		$websiteName = Settings::getInstance()->p['websiteName'];
+		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
 		
 		$email = $_POST['email'];
 		
@@ -173,15 +178,17 @@ class UsersController extends UsersDatabaseHandler
 			$forgotPasswordMessage = str_replace("<<IdUser>>", $row['UserId'], $messages[$row[1]]["forgotPasswordMessage"]);
 			$forgotPasswordMessage = str_replace("<<ResetCode>>", $resetCode, $forgotPasswordMessage);
 			$forgotPasswordMessage = str_replace("<<SendTo>>", $email, $forgotPasswordMessage);
-			
-			// In case any of our lines are larger than 70 characters, we should use wordwrap()
-			$forgotPasswordMessage = wordwrap($forgotPasswordMessage, 70, "\r\n");
-					
-			$headers =  'From: '.$eMailSendFrom.'' . "\r\n" .
-						'Reply-To: '.$eMailSendFrom.'' . "\r\n" .
-						'X-Mailer: PHP/' . phpversion();
 						
-			mail($email, $eMailSubject, $forgotPasswordMessage, $headers);
+			$headers =  "From: $websiteName <".$eMailSendFrom.">\r\n" .
+						"Reply-To: $websiteName <".$eMailSendFrom.">\r\n" .
+						"Return-Path: $websiteName <".$eMailSendFrom.">\r\n" .
+						"Organization: $websiteName\r\n" .
+						"MIME-Version: 1.0\r\n" .
+						"Content-type: text/plain; charset=iso-8859-1\r\n" .
+						"X-Priority: 3\r\n" .
+						"X-Mailer: PHP/" . phpversion();
+						
+			mail($email, $websiteName." Forgot Password", $forgotPasswordMessage, $headers);
 			
 			return "OK";
 		} else {
@@ -196,7 +203,10 @@ class UsersController extends UsersDatabaseHandler
      * @url GET /user/resetpassword/$idUser/$code
      */
     public function resetPassword($idUser = null, $code = null) {
-		global $mysqli, $messages, $eMailSendFrom;
+		global $mysqli, $messages;
+		
+		$websiteName = Settings::getInstance()->p['websiteName'];
+		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
 		
 		if($idUser != null && $code != null) {
 			$sql = "SELECT Email, PasswordResetDateTime, Language FROM User WHERE PasswordResetToken = '$code' AND UserId = $idUser";
@@ -225,15 +235,17 @@ class UsersController extends UsersDatabaseHandler
 					
 					$resetPasswordMessage = str_replace("<<NewPassword>>", $newPassword, $messages[$row[2]]["resetPasswordMessage"]);
 					$resetPasswordMessage = str_replace("<<SendTo>>", $sendTo, $resetPasswordMessage);
-							
-					// In case any of our lines are larger than 70 characters, we should use wordwrap()
-					$resetPasswordMessage = wordwrap($resetPasswordMessage, 70, "\r\n");
-							
-					$headers =  'From: '.$eMailSendFrom.'' . "\r\n" .
-								'Reply-To: '.$eMailSendFrom.'' . "\r\n" .
-								'X-Mailer: PHP/' . phpversion();
+					
+					$headers =  "From: $websiteName <".$eMailSendFrom.">\r\n" .
+								"Reply-To: $websiteName <".$eMailSendFrom.">\r\n" .
+								"Return-Path: $websiteName <".$eMailSendFrom.">\r\n" .
+								"Organization: $websiteName\r\n" .
+								"MIME-Version: 1.0\r\n" .
+								"Content-type: text/plain; charset=iso-8859-1\r\n" .
+								"X-Priority: 3\r\n" .
+								"X-Mailer: PHP/" . phpversion();
 								
-					mail($sendTo, $eMailSubject, $resetPasswordMessage, $headers);
+					mail($sendTo, $websiteName." Reset Password", $resetPasswordMessage, $headers);
 					
 					return "OK";
 				} else {

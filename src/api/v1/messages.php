@@ -29,9 +29,7 @@ $authIssueText = "The current operation cannot be processed due to a problem of 
 $unsupportedFileMsg = "Unsupported file.";
 
 $websiteName = Settings::getInstance()->p['websiteName'];
-$websiteUrl = Settings::getInstance()->p['websiteUrl'];
-
-$eMailSendFrom = "support@".$websiteDomain;
+$websiteUrl  = Settings::getInstance()->p['websiteUrl'];
 
 $messages = array(
 	"en" => array(
