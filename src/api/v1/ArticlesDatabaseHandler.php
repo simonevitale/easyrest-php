@@ -49,7 +49,7 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 		if($userId > 0) $sql .= "AND Article.UserId = $userId ";
 			
 		// Apply Filters
-		if($filters != null || $year != null) {
+		if($filters != null) {
 			foreach ($filters as $key => $value) {
 				// Language filter shows also records with no set language
 				if(strcmp($key, "Language") == 0)
@@ -76,8 +76,8 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 
 		if($recordsCount >= 1 && $result != null) {
 			while($row = mysqli_fetch_array($result)) {
-				$imageUrl = parent::GetImageUrl($row[UserId], $row[Image], $userArticlesFolder, false);
-				$imageThumbnailUrl = parent::GetImageUrl($row[UserId], $row[Image], $userArticlesFolder, true);
+				$imageUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row[UserId], $row[Image], $userArticlesFolder, false) : "";
+				$imageThumbnailUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row[UserId], $row[Image], $userArticlesFolder, true) : "";
 				$ShortDescription = parent::substrwords(strip_tags($row['Description']), 120);
 
 				$articles[] = array (

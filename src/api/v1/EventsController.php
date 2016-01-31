@@ -35,24 +35,25 @@ class EventsController extends EventsDatabaseHandler
 	 * If authentication is provided, it show published event for the authenticated user
 	 *
      * @url GET /events
-     * @url GET /events/$idUser
+     * @url GET /events/$userId
 	 */
-	public function getEvents($idUser = -1) {
+	public function getEvents($userId = -1) {
 		$authIdUser = parent::CheckAuthentication(false);
 		
 		if ($authIdUser > 0) {
 			$authenticated = true;
-			if($idUser <= 0)
-				$idUser = $authIdUser;
+			if($userId <= 0)
+				$userId = $authIdUser;
 		}
 		
 		$filters = array();
 		$notFilters = array();
 		
+		if(isset($_GET['userId']) && $_GET['userId'] != "") $filters[UserId] = $_GET['userId'];
 		if(isset($_GET['language']) && $_GET['language'] != "") $filters[Language] = $_GET['language'];
 		if(isset($_GET['published']) && $_GET['published'] != "") $filters[Published] = $_GET['published'];
 		
-		if($authenticated == false) {
+		if($authenticated == false || isset($_GET['userId'])) {
 			// If not authenticated shows only published events
 			$filters[Published] = 1;
 		}
@@ -61,8 +62,9 @@ class EventsController extends EventsDatabaseHandler
 		if(isset($_GET['from']))  $from = $_GET['from']; else $from = -1;
 		if(isset($_GET['count'])) $count = $_GET['count']; else $count = -1;
 		if(isset($_GET['year']))  $year = $_GET['year']; else $year = null;
+		if(isset($_GET['orderby'])) $orderby = $_GET['orderby']; else $orderby = "";
 		
-		return parent::Events($filters, $notFilters, $from, $count, $idUser, "EventId DESC", $upcoming, $year);
+		return parent::Events($filters, $notFilters, $from, $count, $userId, $orderby, $upcoming, $year);
 	}
 
     /**

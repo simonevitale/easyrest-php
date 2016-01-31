@@ -49,13 +49,14 @@ class ArticlesController extends ArticlesDatabaseHandler
 		$filters = array();
 		$notFilters = array();
 		
+		if(isset($_GET['userId']) && $_GET['userId'] != "") 	  $filters[UserId] = $_GET['userId'];
 		if(isset($_GET['language']) && $_GET['language'] != "")   $filters[Language]  = $_GET['language'];
 		if(isset($_GET['published']) && $_GET['published'] != "") $filters[Published] = $_GET['published'];
 		if(isset($_GET['category']) && $_GET['category'] != "")   $filters[Category]  = $_GET['category'];
 		
 		if(isset($_GET['exceptCategory']) && $_GET['exceptCategory'] != "") $notFilters[ExceptCategory] = $_GET['exceptCategory'];
 		
-		if($authenticated == false) {
+		if($authenticated == false || isset($_GET['userId'])) {
 			// If not authenticated shows only published articles
 			$filters[Published] = 1;
 		}

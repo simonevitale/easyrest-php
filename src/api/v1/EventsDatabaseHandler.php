@@ -51,7 +51,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 		if($userId > 0) $sql .= "AND Event.UserId = $userId ";
 
 		// Apply Filters
-		if($filters != null || $year != null) {
+		if($filters != null) {
 			// Language filter shows also records with no set language
 			foreach ($filters as $key => $value) {
 				if(strcmp($key, "Language") == 0)
@@ -70,14 +70,14 @@ class EventsDatabaseHandler extends DatabaseHandler
 		
 		// Showing upcoming events
 		if($upcoming == 1)
-			$sql .= " AND Event.DateTime >= '".date('Y-m-d')."' ";
+			$sql .= " AND Event.DateTime <> '' AND Event.DateTime >= '".date('Y-m-d')."' ";
 			
 		// Showing past events
 		if($upcoming == -1)
-			$sql .= " AND Event.DateTime < '".date('Y-m-d')."' ";
+			$sql .= " AND Event.DateTime <> '' AND Event.DateTime < '".date('Y-m-d')."' ";
 			
 		if($year != null)
-			$sql .= " AND Event.DateTime >= '$year-01-01' AND Event.DateTime <= '$year-12-31' ";
+			$sql .= " AND date(Event.DateTime) BETWEEN date('$year-01-01') AND date('$year-12-31') ";
 		
 		if(strlen($orderBy) > 0)
 			$sql .= "ORDER BY $orderBy ";
@@ -95,8 +95,8 @@ class EventsDatabaseHandler extends DatabaseHandler
 			$rowNum = 1;
 
 			while($row = mysqli_fetch_array($result)) {
-				$imageThumbnailUrl = parent::GetImageUrl($row[UserId], $row[Image], $userEventsFolder, true);
-				$imageUrl = parent::GetImageUrl($row[UserId], $row[Image], $userEventsFolder, false);
+				$imageThumbnailUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row[UserId], $row[Image], $userEventsFolder, true) : "";
+				$imageUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row[UserId], $row[Image], $userEventsFolder, false) : "";
 				
 				$ShortDescription = parent::substrwords(strip_tags($row['Description']), 120);
 
