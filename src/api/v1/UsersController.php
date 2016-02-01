@@ -28,8 +28,6 @@ use \Jacwright\RestServer\RestException;
 require_once("UsersDatabaseHandler.php");
 require_once("functions.php");
 
-$mysqli = Database::getInstance()->getConnection();
-
 class UsersController extends UsersDatabaseHandler
 {
     /**
@@ -38,7 +36,7 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/signup/
      */
     public function signUp() {
-		global $messages, $authIssueText, $mysqli;
+		global $messages, $authIssueText;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
 		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
@@ -54,7 +52,7 @@ class UsersController extends UsersDatabaseHandler
 		$language = "en";
 	
 		$sql = "SELECT UserStateId FROM User WHERE Email = '$email'";
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
 		$row = mysqli_fetch_array($result);
 		
@@ -151,7 +149,7 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/forgotpassword/
      */
     public function forgotPassword() {	
-		global $mysqli, $messages;
+		global $messages;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
 		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
@@ -164,7 +162,7 @@ class UsersController extends UsersDatabaseHandler
 		
 		$sql = "SELECT UserId, Language FROM User WHERE Email = '".$email."'";
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
 
 		if($recordsCount >= 1 && $result != null) {
@@ -203,7 +201,7 @@ class UsersController extends UsersDatabaseHandler
      * @url GET /user/resetpassword/$idUser/$code
      */
     public function resetPassword($idUser = null, $code = null) {
-		global $mysqli, $messages;
+		global $messages;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
 		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
@@ -211,7 +209,7 @@ class UsersController extends UsersDatabaseHandler
 		if($idUser != null && $code != null) {
 			$sql = "SELECT Email, PasswordResetDateTime, Language FROM User WHERE PasswordResetToken = '$code' AND UserId = $idUser";
 			
-			$result = $mysqli->query($sql) or die ($authIssueText);
+			$result = $this->mysqli->query($sql) or die ($authIssueText);
 			$recordsCount = mysqli_num_rows($result);
 		
 			if($recordsCount >= 1 && $result != null) {
@@ -231,7 +229,7 @@ class UsersController extends UsersDatabaseHandler
 					$sql .= " PasswordResetToken = '' ";
 					$sql .= " WHERE UserId = $idUser ";
 
-					$result = $mysqli->query($sql) or die ($authIssueText);
+					$result = $this->mysqli->query($sql) or die ($authIssueText);
 					
 					$resetPasswordMessage = str_replace("<<NewPassword>>", $newPassword, $messages[$row[2]]["resetPasswordMessage"]);
 					$resetPasswordMessage = str_replace("<<SendTo>>", $sendTo, $resetPasswordMessage);
@@ -263,8 +261,6 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/changepassword
      */
     public function changePassword() {
-		global $mysqli;
-		
 		$userId = $_POST['IdUser'];
 		$password = $_POST['OldPassword'];
 		$newPassword = $_POST['NewPassword'];
@@ -273,7 +269,7 @@ class UsersController extends UsersDatabaseHandler
 		$sql .= " PasswordHash = '".$newPassword."' ";
 		$sql .= " WHERE UserId = $userId AND PasswordHash = '".$password."'";
 		
-		if($mysqli->query($sql) != null) {
+		if($this->mysqli->query($sql) != null) {
 			return "OK";
 		} else {
 			throw new RestException(403, "Forbidden - Couldn't change the current password");

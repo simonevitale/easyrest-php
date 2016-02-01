@@ -27,8 +27,6 @@ use \Jacwright\RestServer\RestException;
 
 require_once("Database.php");
 
-$mysqli = Database::getInstance()->getConnection();
-
 class LogsController extends DatabaseHandler
 {
     /**
@@ -37,8 +35,6 @@ class LogsController extends DatabaseHandler
      * @url GET /logs
      */
     public function getPrivateLogs() {
-		global $mysqli;
-		
 		$authIdUser = parent::CheckAuthentication(true, true);
 		
 		$logs = null;
@@ -61,7 +57,7 @@ class LogsController extends DatabaseHandler
 		}
 		$sql .= " ORDER BY LogId DESC LIMIT $from, $count ";
 
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
 
 		if($recordsCount >= 1 && $result != null) {

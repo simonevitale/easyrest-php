@@ -36,6 +36,12 @@ $mysqli = Database::getInstance()->getConnection();
  */
 class DatabaseHandler
 {	
+	protected $mysqli;
+	
+	public function __construct() {
+		$this->mysqli = Database::getInstance()->getConnection();
+	}
+	
 	/*
 	 * @returns:
 	 *  -1: wrong credentials

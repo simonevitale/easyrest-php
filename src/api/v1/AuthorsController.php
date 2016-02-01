@@ -34,8 +34,7 @@ class AuthorsController extends AuthorsDatabaseHandler
      * 
      * @url GET /authors/$userId
      */
-    public function getAuthors($userId = null)
-    {
+    public function getAuthors($userId = null) {
 		if(isset($_GET['format'])) $format = $_GET['format']; else $format = null;
 		
 		return parent::Authors($userId, $format);
@@ -46,8 +45,7 @@ class AuthorsController extends AuthorsDatabaseHandler
      * 
      * @url GET /author/$authorId
      */
-    public function getAuthor($authorId)
-	{
+    public function getAuthor($authorId) {
 		return parent::AuthorById($authorId);
 	}
 	

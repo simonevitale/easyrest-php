@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-$mysqli = Database::getInstance()->getConnection();
 	
 /**
  * Manages the database operations about locations
@@ -33,8 +31,6 @@ $mysqli = Database::getInstance()->getConnection();
 class LocationsDatabaseHandler extends DatabaseHandler
 {
 	public function Locations($idUser, $format, $filters = null) {
-		global $mysqli;
-	
 		$sql = "SELECT LocationId, Name, Address1, Address2, PostCode, City, Country, Phone, Email, Description, WebsiteLink, FacebookLink, FlickrLink, Active FROM Location WHERE UserId = $idUser AND Active = true ";
 		
 		// Apply Filters
@@ -46,7 +42,7 @@ class LocationsDatabaseHandler extends DatabaseHandler
 		
 		$sql .= " ORDER BY Name";
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
 		
 		$locations = array();
@@ -76,11 +72,9 @@ class LocationsDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function LocationById($LocationId) {
-		global $mysqli;
-
 		$sql = "SELECT LocationId, Name, Address1, Address2, PostCode, City, Country, Description, Phone, Email, WebsiteLink, FacebookLink, FlickrLink, Active, UserId FROM Location WHERE LocationId = $LocationId";
 
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		$data = 0;
@@ -109,12 +103,12 @@ class LocationsDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function CreateLocation($Name, $UserId) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		$sql = "INSERT INTO Location (Name, UserId) ";
-		$sql .= "VALUES(\"".$mysqli->real_escape_string($Name)."\", $UserId)";
+		$sql .= "VALUES(\"".$this->mysqli->real_escape_string($Name)."\", $UserId)";
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;
 	}

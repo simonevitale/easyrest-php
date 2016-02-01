@@ -25,8 +25,6 @@
 
 require_once "./AuthorsDatabaseHandler.php";
 require_once "./UsersDatabaseHandler.php";
-
-$mysqli = Database::getInstance()->getConnection();
 	
 /**
  * Manages the database operations about articles
@@ -36,7 +34,7 @@ $mysqli = Database::getInstance()->getConnection();
 class ArticlesDatabaseHandler extends DatabaseHandler
 {
 	public function Articles($filters = null, $notFilters = null, $from = -1, $count = -1, $userId = -1) {	
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		$userArticlesFolder = Settings::getInstance()->p['userArticlesFolder'];
 
@@ -71,7 +69,7 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 		if($from != -1 && $count != -1)
 			$sql .= "LIMIT $from, $count \n";
 		
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		if($recordsCount >= 1 && $result != null) {
@@ -101,16 +99,14 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 		return $articles;
 	}
 
-	public function ArticleById($IdArticle, $IdUser = null) {
-		global $mysqli;
-		
+	public function ArticleById($IdArticle, $IdUser = null) {		
 		$userArticlesFolder = Settings::getInstance()->p['userArticlesFolder'];
 
 		$ArticleFieldsSql = " Article.UserId, Article.ArticleId, Article.Title, Article.Image, Article.Description AS Description, Article.DateTime, Article.YouTubeLink, Article.FlickrLink, Article.Language, Article.Published, Article.Category ";
 		
 		$sql = "SELECT $ArticleFieldsSql, AuthorId FROM Article WHERE ArticleId = $IdArticle";
 		
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		$data = 0;
@@ -146,7 +142,7 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function CreateArticle($Title, $UserId) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 			
 		$UsersHandler = new UsersDatabaseHandler;
 		
@@ -155,30 +151,30 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 		$Language = $User['Language'];
 		
 		$sql = "INSERT INTO Article (Title, UserId, CreationDateTime, Language) ";
-		$sql .= "VALUES(\"".$mysqli->real_escape_string($Title)."\", $UserId, '".time()."', \"$Language\")";
+		$sql .= "VALUES(\"".$this->mysqli->real_escape_string($Title)."\", $UserId, '".time()."', \"$Language\")";
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;
 	}
 	
 	public function DbUpdateArticle($Article) {
-		global $authIssueText, $mysqli;
+		global $authIssueText;
 		
 		$sql  = "UPDATE Article SET";
-		$sql .= "  Title = \"".$mysqli->real_escape_string($Article['Title'])."\"";
+		$sql .= "  Title = \"".$this->mysqli->real_escape_string($Article['Title'])."\"";
 		$sql .= ", Image = \"".$Article['Image']."\"";
 		$sql .= ", Category = \"".$Article['Category']."\"";
 		$sql .= ", Language = \"".$Article['Language']."\"";
-		$sql .= ", Description = \"".$mysqli->real_escape_string($Article['Description'])."\"";
+		$sql .= ", Description = \"".$this->mysqli->real_escape_string($Article['Description'])."\"";
 		$sql .= ", DateTime = \"".$Article['DateTime']."\"";
-		$sql .= ", YouTubeLink = \"".$mysqli->real_escape_string($Article['YouTubeLink'])."\"";
-		$sql .= ", FlickrLink = \"".$mysqli->real_escape_string($Article['FlickrLink'])."\"";
+		$sql .= ", YouTubeLink = \"".$this->mysqli->real_escape_string($Article['YouTubeLink'])."\"";
+		$sql .= ", FlickrLink = \"".$this->mysqli->real_escape_string($Article['FlickrLink'])."\"";
 		$sql .= ", Published = ".$Article['Published'];
 		$sql .= ", AuthorId = ".$Article['AuthorId'];
 		$sql .= " WHERE ArticleId = ".$Article['ArticleId'];
 		
-		return $mysqli->query($sql) or die ($authIssueText);
+		return $this->mysqli->query($sql) or die ($authIssueText);
 	}
 }
 

@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-$mysqli = Database::getInstance()->getConnection();
 	
 /**
  * Manages the database operations about users
@@ -33,11 +31,11 @@ $mysqli = Database::getInstance()->getConnection();
 class UsersDatabaseHandler extends DatabaseHandler
 {
 	public function UserById($userId) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 
 		$sql = "SELECT UserId, Email, Username, FirstName, LastName, Country, RegistrationDateTime, LastLoginDateTime, UserStateId, LoginAttempts, MobilePhone, Language, RoleId FROM User WHERE UserId = $userId";
 
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		$data = null;
@@ -64,10 +62,10 @@ class UsersDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function CreateUser($email, $password, $registrationCode, $country = null, $language = "en", $roleId = 2) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		$sql = "SELECT UserStateId FROM User WHERE Email = '$email'";
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
 		$row = mysqli_fetch_array($result);
 		
@@ -79,22 +77,20 @@ class UsersDatabaseHandler extends DatabaseHandler
 				$sql = "UPDATE User SET PasswordHash = '$password', Country = '$country', Language = '$language', RegistrationToken = '$registrationCode', RegistrationDateTime = '".time()."', RoleId = $roleId ";
 				$sql .= " WHERE Email = '$email' ";
 				
-				$result = $mysqli->query($sql) or die ($authIssueText);
+				$result = $this->mysqli->query($sql) or die ($authIssueText);
 			}
 		} else {
 			// User not existing: create!
 			$sql = "INSERT INTO User (Email, PasswordHash, Country, Language, RegistrationToken, RegistrationDateTime, RoleId) ";
 			$sql .= " VALUES ('$email', '$password', '$country', '$language', '$registrationCode', '".time()."', $roleId) ";
 			
-			$result = $mysqli->query($sql) or die ($authIssueText);
+			$result = $this->mysqli->query($sql) or die ($authIssueText);
 		}
 		
 		return $result;
 	}
 	
 	public function ConfirmUserRegistration($Email, $RegistrationToken) {
-		global $mysqli;
-		
 		$expirationTime = (24 * 60 * 60);
 		
 		$sql  = " UPDATE User SET ";
@@ -103,9 +99,9 @@ class UsersDatabaseHandler extends DatabaseHandler
 		$sql .= " WHERE Email = '$Email' AND RegistrationToken = '$RegistrationToken'";
 		$sql .= " AND RegistrationDateTime > " . (time() - $expirationTime);
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
-		if($mysqli->affected_rows > 0) {
+		if($this->mysqli->affected_rows > 0) {
 			return true;
 		} else {
 			return false;
@@ -114,35 +110,33 @@ class UsersDatabaseHandler extends DatabaseHandler
 	
 	// Create a temporary passcode to allow the user to reset his own password
 	public function CreateResetPasswordCode($userId, $token) {
-		global $mysqli;
-		
 		$sql  = " UPDATE User SET ";
 		$sql .= " PasswordResetToken = '".$token."', ";
 		$sql .= " PasswordResetDateTime = '".time()."' ";
 		$sql .= " WHERE UserId = $userId";
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;
 	}
 	
 	function DbUpdateUser($User) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		$sql  = "UPDATE User SET";
-		$sql .= " Email = \"".$mysqli->real_escape_string($User['Email'])."\"";
-		$sql .= ", Username = \"".$mysqli->real_escape_string($User['Username'])."\"";
-		$sql .= ", FirstName = \"".$mysqli->real_escape_string($User['FirstName'])."\"";
-		$sql .= ", LastName = \"".$mysqli->real_escape_string($User['LastName'])."\"";
-		$sql .= ", Country = \"".$mysqli->real_escape_string($User['Country'])."\"";
+		$sql .= " Email = \"".$this->mysqli->real_escape_string($User['Email'])."\"";
+		$sql .= ", Username = \"".$this->mysqli->real_escape_string($User['Username'])."\"";
+		$sql .= ", FirstName = \"".$this->mysqli->real_escape_string($User['FirstName'])."\"";
+		$sql .= ", LastName = \"".$this->mysqli->real_escape_string($User['LastName'])."\"";
+		$sql .= ", Country = \"".$this->mysqli->real_escape_string($User['Country'])."\"";
 		$sql .= ", LastLoginDateTime = \"".$User['LastLoginDateTime']."\"";
 		$sql .= ", UserStateId   = ".$User['UserStateId'];
 		$sql .= ", LoginAttempts = ".$User['LoginAttempts'];
-		$sql .= ", MobilePhone   = \"".$mysqli->real_escape_string($User['MobilePhone'])."\"";
-		$sql .= ", Language = \"".$mysqli->real_escape_string($User['Language'])."\"";
+		$sql .= ", MobilePhone   = \"".$this->mysqli->real_escape_string($User['MobilePhone'])."\"";
+		$sql .= ", Language = \"".$this->mysqli->real_escape_string($User['Language'])."\"";
 		$sql .= " WHERE UserId = ".$User['UserId'];
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return true;
 	}

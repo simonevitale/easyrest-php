@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-$mysqli = Database::getInstance()->getConnection();
 	
 /**
  * Manages the database operations about authors
@@ -33,8 +31,6 @@ $mysqli = Database::getInstance()->getConnection();
 class AuthorsDatabaseHandler extends DatabaseHandler
 {
 	public function Authors($userId) {
-		global $mysqli;
-		
 		$userAuthorsFolder = Settings::getInstance()->p['userAuthorsFolder'];
 		
 		$UserHandler = new UsersDatabaseHandler();
@@ -45,7 +41,7 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 
 		$sql = "SELECT AuthorId, Name, Image FROM Author WHERE UserId = $userId AND Active = true ORDER BY Name";
 
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
 
 		$authors = array();
@@ -68,13 +64,11 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function AuthorById($authorId) {
-		global $mysqli;
-		
 		$userAuthorsFolder = Settings::getInstance()->p['userAuthorsFolder'];
 
 		$sql = "SELECT AuthorId, Name, Image, UserId FROM Author WHERE AuthorId = $authorId";
 
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		$data = 0;
@@ -97,23 +91,23 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function CreateAuthor($name, $userId) {
-		global $authIssueText, $mysqli;
+		global $authIssueText;
 		
-		$sql = "INSERT INTO Author (Name, UserId) VALUES (\"".$mysqli->real_escape_string($name)."\", $userId)";
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$sql = "INSERT INTO Author (Name, UserId) VALUES (\"".$this->mysqli->real_escape_string($name)."\", $userId)";
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;
 	}
 	
 	public function DbUpdateAuthor($author) {
-		global $authIssueText, $mysqli;
+		global $authIssueText;
 		
 		$sql  = "UPDATE Author SET";
-		$sql .= "  Name = \"".$mysqli->real_escape_string($author['Name'])."\"";
+		$sql .= "  Name = \"".$this->mysqli->real_escape_string($author['Name'])."\"";
 		$sql .= ", Image = \"".$author['Image']."\"";
 		$sql .= " WHERE AuthorId = ".$author['AuthorId'];
 		
-		return $mysqli->query($sql) or die ($authIssueText);
+		return $this->mysqli->query($sql) or die ($authIssueText);
 	}
 }
 

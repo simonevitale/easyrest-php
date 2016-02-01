@@ -25,8 +25,6 @@
 
 require_once("./LocationsDatabaseHandler.php");
 
-$mysqli = Database::getInstance()->getConnection();
-
 class LocationsController extends LocationsDatabaseHandler
 {
     /**
@@ -60,7 +58,7 @@ class LocationsController extends LocationsDatabaseHandler
     public function updateLocation() {
 		$userId = parent::CheckAuthentication();
 		
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		if(isset($_POST['IdLocation']) && is_numeric($_POST['IdLocation'])) {
 			$locationId = $_POST['IdLocation'];
@@ -72,13 +70,13 @@ class LocationsController extends LocationsDatabaseHandler
 		parent::CheckIfOwned($userId, "Location", $locationId, true);
 		
 		$sql  = "UPDATE Location SET";
-		$sql .= "  Name = \"".$mysqli->real_escape_string($_POST['NameLocation'])."\"";
-		$sql .= ", Address1 = \"".$mysqli->real_escape_string($_POST['Address1Location'])."\"";
-		$sql .= ", Address2 = \"".$mysqli->real_escape_string($_POST['Address2Location'])."\"";
+		$sql .= "  Name = \"".$this->mysqli->real_escape_string($_POST['NameLocation'])."\"";
+		$sql .= ", Address1 = \"".$this->mysqli->real_escape_string($_POST['Address1Location'])."\"";
+		$sql .= ", Address2 = \"".$this->mysqli->real_escape_string($_POST['Address2Location'])."\"";
 		$sql .= ", PostCode = \"".$_POST['PostCodeLocation']."\"";
-		$sql .= ", City = \"".$mysqli->real_escape_string($_POST['CityLocation'])."\"";
+		$sql .= ", City = \"".$this->mysqli->real_escape_string($_POST['CityLocation'])."\"";
 		$sql .= ", Country = \"".$_POST['CountriesLocation']."\"";
-		$sql .= ", Description = \"".$mysqli->real_escape_string($_POST['DescriptionLocation'])."\"";
+		$sql .= ", Description = \"".$this->mysqli->real_escape_string($_POST['DescriptionLocation'])."\"";
 		$sql .= ", Phone = \"".$_POST['PhoneLocation']."\"";
 		$sql .= ", Email = \"".$_POST['EmailLocation']."\"";
 		$sql .= ", WebsiteLink = \"".$_POST['WebsiteLinkLocation']."\"";
@@ -86,7 +84,7 @@ class LocationsController extends LocationsDatabaseHandler
 		$sql .= ", FlickrLink = \"".$_POST['FlickrLinkLocation']."\"";
 		$sql .= " WHERE LocationId = ".$locationId;
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return $locationId;
 	}
@@ -97,8 +95,6 @@ class LocationsController extends LocationsDatabaseHandler
      * @url POST /location/delete/
      */
     public function deleteLocation() {
-		global $mysqli;
-	
 		$userId = parent::CheckAuthentication();
 		
 		$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$_POST['IdLocation']);

@@ -26,8 +26,6 @@
 require_once("./AuthorsDatabaseHandler.php");
 require_once("./UsersDatabaseHandler.php");
 require_once("./LocationsDatabaseHandler.php");
-
-$mysqli = Database::getInstance()->getConnection();
 	
 /**
  * Manages the database operations about events
@@ -37,8 +35,6 @@ $mysqli = Database::getInstance()->getConnection();
 class EventsDatabaseHandler extends DatabaseHandler
 {
 	function Events($filters = null, $notFilters = null, $from = -1, $count = -1, $userId = -1, $orderBy = "", $upcoming = 1, $year = null) {
-		global $mysqli;
-		
 		$userEventsFolder = Settings::getInstance()->p['userEventsFolder'];
 
 		$events = array();
@@ -87,7 +83,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 		if($from != -1 && $count != -1)
 			$sql .= " LIMIT $from, $count \n";
 		
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		
 		$recordsCount = mysqli_num_rows($result);
 
@@ -123,15 +119,13 @@ class EventsDatabaseHandler extends DatabaseHandler
 	}
 	
 	function EventById($EventId) {
-		global $mysqli;
-		
 		$userEventsFolder = Settings::getInstance()->p['userEventsFolder'];
 
 		$EventFieldsSql = " Event.UserId, Event.EventId, Event.Title, Event.Image, Event.Description AS Description, Event.CreationDateTime, Event.DateTime, Event.FacebookLink, Event.YouTubeLink, Event.FlickrLink, Event.Language, Event.Published, Event.Statistics ";
 		
 		$sql = "SELECT $EventFieldsSql, AuthorId, LocationId FROM Event WHERE Event.EventId = $EventId";
 		
-		$result = $mysqli->query($sql);
+		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		$data = 0;
@@ -174,7 +168,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 	}
 	
 	function CreateEvent($Title, $UserId) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		$UsersHandler = new UsersDatabaseHandler;
 		
@@ -185,30 +179,30 @@ class EventsDatabaseHandler extends DatabaseHandler
 		$sql = "INSERT INTO Event (Title, UserId, CreationDateTime, Language) ";
 		$sql .= "VALUES('$Title', $UserId, '".time()."', '$Language')";
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;
 	}
 	
 	function DbUpdateEvent($event) {
-		global $mysqli, $authIssueText;
+		global $authIssueText;
 		
 		$sql  = "UPDATE Event SET";
-		$sql .= "  Title = \"".$mysqli->real_escape_string($event['Title'])."\"";
+		$sql .= "  Title = \"".$this->mysqli->real_escape_string($event['Title'])."\"";
 		$sql .= ", LocationId = ".$event['LocationId'];
 		$sql .= ", AuthorId = ".$event['AuthorId'];
 		$sql .= ", Image = \"".$event['Image']."\"";
-		$sql .= ", Description = \"".$mysqli->real_escape_string($event['Description'])."\"";
+		$sql .= ", Description = \"".$this->mysqli->real_escape_string($event['Description'])."\"";
 		$sql .= ", DateTime = \"".$event['DateTime']."\"";
 		$sql .= ", FacebookLink = \"".$event['FacebookLink']."\"";
 		$sql .= ", YouTubeLink = \"".$event['YouTubeLink']."\"";
 		$sql .= ", FlickrLink = \"".$event['FlickrLink']."\"";
-		$sql .= ", Statistics = \"".$mysqli->real_escape_string($event['Statistics'])."\"";
+		$sql .= ", Statistics = \"".$this->mysqli->real_escape_string($event['Statistics'])."\"";
 		$sql .= ", Language = \"".$event['Language']."\"";
 		$sql .= ", Published = ".$event['Published'];
 		$sql .= " WHERE EventId = ".$event['EventId'];
 		
-		$result = $mysqli->query($sql) or die ($authIssueText);
+		$result = $this->mysqli->query($sql) or die ($authIssueText);
 	}
 }
 
