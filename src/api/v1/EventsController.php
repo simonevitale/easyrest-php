@@ -24,6 +24,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 use \Jacwright\RestServer\RestException;
+include "libs/phpqrcode/qrlib.php"; 
 
 require_once("./EventsDatabaseHandler.php");
 
@@ -81,6 +82,42 @@ class EventsController extends EventsDatabaseHandler
 			parent::CheckIfOwned($userId, "Event", $eventId, true);
 		}
 		return $event;
+	}
+	
+    /**
+     * Get Event
+     * 
+     * @url GET /event/$eventId/qr/
+     * @url GET /event/$eventId/qr/$size/
+     * @url GET /event/$eventId/qr/$size/$ecc
+     */
+    public function getEventQrUrl($eventId, $size = 4, $ecc = "L") {
+		$event = parent::EventById($eventId);
+		
+		// Requires auth and ownership to show non published articles
+		if($event['Published'] == 0) {
+			$userId = parent::CheckAuthentication(true);
+			parent::CheckIfOwned($userId, "Event", $eventId, true);
+		}
+		
+		$websiteUrl = Settings::getInstance()->p['websiteUrl'];
+		$portalFolder = Settings::getInstance()->p['portalFolder'];
+		$userUploadFolder = Settings::getInstance()->p['userUploadFolder'];
+		$userEventsFolder = Settings::getInstance()->p['userEventsFolder'];
+		
+		$qrPrefix = "qr.event.";
+		$qrExt = ".png";
+		$qrFilename = $qrPrefix."$ecc.$size.".$eventId.$qrExt;
+		$qrRelUrl = "../../$userUploadFolder/".$event['UserId']."/".$userEventsFolder."/".$qrFilename;
+		$qrUrl = $websiteUrl."/".$portalFolder."/".$userUploadFolder."/".$event['UserId']."/".$userEventsFolder."/".$qrFilename;
+		
+		$data = $websiteUrl."/".$userEventsFolder."/".$eventId;
+		
+		if(!file_exists($qrRelUrl)) {
+			QRcode::png($data, $qrRelUrl, $ecc, $size, 2);
+		}
+		
+		return $qrUrl;
 	}
 
     /**
