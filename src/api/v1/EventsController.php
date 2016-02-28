@@ -117,7 +117,7 @@ class EventsController extends EventsDatabaseHandler
 			QRcode::png($data, $qrRelUrl, $ecc, $size, 2);
 		}
 		
-		return $qrUrl;
+		echo $qrUrl;
 	}
 
     /**

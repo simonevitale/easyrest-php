@@ -85,6 +85,38 @@ class UsersController extends UsersDatabaseHandler
 	}
 	
     /**
+     * Contact Us Form
+     *
+     * @url POST /user/contactus/
+     */
+	public function contactUs() {
+		$name = $_POST["name"];
+		$eMailFrom = $_POST["email"];
+		$phone = $_POST["phone"];
+		
+		$message = "From: ".$_POST["name"]." [ $eMailFrom ]\n";
+		if(strlen($phone) > 0)
+			$message .= "Phone: $phone \n";
+		$message .= "\n\n".$_POST["message"];
+		
+		$websiteName = Settings::getInstance()->p['websiteName'];
+		$supportEmail = Settings::getInstance()->p['supportEmail'];
+				
+		$headers =  "From: $name via $websiteName <".$eMailFrom.">\r\n" .
+					"Reply-To: $name <".$eMailFrom.">\r\n" .
+					"Return-Path: $websiteName <".$eMailFrom.">\r\n" .
+					"Organization: $websiteName\r\n" .
+					"MIME-Version: 1.0\r\n" .
+					"Content-type: text/plain; charset=iso-8859-1\r\n" .
+					"X-Priority: 3\r\n" .
+					"X-Mailer: PHP/" . phpversion();
+		
+		mail($supportEmail, "$websiteName Account", $message, $headers);
+		
+		return "OK";
+	}
+	
+    /**
      * Confirm a new user registration
      *
      * @url GET /user/confirmregistration/
