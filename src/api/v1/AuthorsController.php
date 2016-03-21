@@ -50,6 +50,15 @@ class AuthorsController extends AuthorsDatabaseHandler
 	}
 	
     /**
+     * Get Author
+     * 
+     * @url GET /author/exists/$idName
+     */
+    public function checkIfIdNameExists($idName) {
+		return parent::CheckIfIdNameExists(strtolower($idName));
+	}
+	
+    /**
      * Update Author
      * 
      * @url POST /author/update/
@@ -67,6 +76,11 @@ class AuthorsController extends AuthorsDatabaseHandler
 		}
 	
 		$author = parent::AuthorById($authorId);
+		
+		if(strlen($_POST['IdName']) > 0 && parent::CheckIfIdNameExists($_POST['IdName'])) {
+			throw new RestException(405, "Unauthorized. The selected id name already exists.");
+		}
+		
 		$isImageUploading = (isset($_FILES['NewPictureAuthor']) && is_uploaded_file($_FILES['NewPictureAuthor']['tmp_name'])) ? 1 : 0;
 		$image = $_POST['PictureAuthor'];
 		
@@ -94,7 +108,7 @@ class AuthorsController extends AuthorsDatabaseHandler
      * 
      * @url POST /author/delete/
      */
-    public function deleteAuthor() {	
+    public function deleteAuthor() {
 		$userId = parent::CheckAuthentication();
 		$authorId = $_POST['IdAuthor'];
 		

@@ -46,6 +46,8 @@ class EventsDatabaseHandler extends DatabaseHandler
 		$sql .= "WHERE EventId > 0 ";
 		if($userId > 0) $sql .= "AND Event.UserId = $userId ";
 
+		//$filters['AuthorId'] = 1;
+		
 		// Apply Filters
 		if($filters != null) {
 			// Language filter shows also records with no set language
@@ -54,7 +56,11 @@ class EventsDatabaseHandler extends DatabaseHandler
 					$sql .= " AND (";
 				else
 					$sql .= " AND ";
-				$sql .= " Event.$key = '$value' ";
+				
+				if(strcmp(gettype($value), "string") == 0)
+					$sql .= " Event.$key = '$value' ";
+				else
+					$sql .= " Event.$key = $value ";
 				
 				if(strcmp($key, "Language") == 0)
 					$sql .= " OR Event.$key = '') ";
@@ -83,6 +89,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 		if($from != -1 && $count != -1)
 			$sql .= " LIMIT $from, $count \n";
 		
+		//echo $sql;
 		$result = $this->mysqli->query($sql);
 		
 		$recordsCount = mysqli_num_rows($result);

@@ -39,7 +39,7 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 		if($User == null)
 			throw new RestException(401, "Unauthorized");
 
-		$sql = "SELECT AuthorId, Name, Image FROM Author WHERE UserId = $userId AND Active = true ORDER BY Name";
+		$sql = "SELECT AuthorId, Name, UniqueName, Image FROM Author WHERE UserId = $userId AND Active = true ORDER BY Name";
 
 		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
@@ -53,6 +53,7 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 
 				$authors[] = array (
 					'AuthorId' => intval($row['AuthorId']),
+					'UniqueName' => $row['UniqueName'],
 					'Name' => $row['Name'],
 					'Image' => $imageUrl,
 					'Thumbnail' => $imageThumbnailUrl
@@ -63,10 +64,10 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 		return $authors;
 	}
 	
-	public function AuthorById($authorId) {
+	private function AuthorBy($condition) {
 		$userAuthorsFolder = Settings::getInstance()->p['userAuthorsFolder'];
 
-		$sql = "SELECT AuthorId, Name, Image, UserId FROM Author WHERE AuthorId = $authorId";
+		$sql = "SELECT AuthorId, Name, UniqueName, Image, UserId FROM Author $condition";
 
 		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
@@ -80,6 +81,7 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 			$authorThumbnailUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row['UserId'], $row['Image'], $userAuthorsFolder, true): "";
 			
 			$data = array(	'AuthorId' => intval($row['AuthorId']),
+							'UniqueName' => $row['UniqueName'],
 							'Name' => $row['Name'],
 							'Image' => $row['Image'],
 							'ImageUrl' => $authorPictureUrl,
@@ -88,6 +90,39 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 		}
 
 		return $data;
+	}
+	
+	public function AuthorById($authorId) {
+		return $this->AuthorBy("WHERE AuthorId = $authorId");
+		/*$userAuthorsFolder = Settings::getInstance()->p['userAuthorsFolder'];
+
+		$sql = "SELECT AuthorId, Name, IdName, Image, UserId FROM Author WHERE AuthorId = $authorId";
+
+		$result = $this->mysqli->query($sql);
+		$recordsCount = mysqli_num_rows($result);
+
+		$data = 0;
+
+		if($recordsCount >= 1 && $result != null) {
+			$row = mysqli_fetch_array($result);
+
+			$authorPictureUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row['UserId'], $row['Image'], $userAuthorsFolder): "";
+			$authorThumbnailUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($row['UserId'], $row['Image'], $userAuthorsFolder, true): "";
+			
+			$data = array(	'AuthorId' => intval($row['AuthorId']),
+							'IdName' => $row['IdName'],
+							'Name' => $row['Name'],
+							'Image' => $row['Image'],
+							'ImageUrl' => $authorPictureUrl,
+							'ThumbnailUrl' => $authorThumbnailUrl,
+							'UserId' => intval($row['UserId']));
+		}
+
+		return $data;*/
+	}
+	
+	public function AuthorByUniqueName($authorUniqueName) {
+		return $this->AuthorBy("WHERE LOWER(UniqueName) = LOWER('$authorUniqueName')");
 	}
 	
 	public function CreateAuthor($name, $userId) {
@@ -99,11 +134,19 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 		return $result;
 	}
 	
+	public function CheckIfIdNameExists($uniqueName) {
+		$sql = "SELECT UniqueName FROM Author WHERE LOWER(UniqueName) = LOWER('$uniqueName')";
+
+		$result = $this->mysqli->query($sql);
+		return(mysqli_num_rows($result) > 0);
+	}
+	
 	public function DbUpdateAuthor($author) {
 		global $authIssueText;
 		
 		$sql  = "UPDATE Author SET";
 		$sql .= "  Name = \"".$this->mysqli->real_escape_string($author['Name'])."\"";
+		$sql .= ", UniqueName = \"".$this->mysqli->real_escape_string($author['UniqueName'])."\"";
 		$sql .= ", Image = \"".$author['Image']."\"";
 		$sql .= " WHERE AuthorId = ".$author['AuthorId'];
 		

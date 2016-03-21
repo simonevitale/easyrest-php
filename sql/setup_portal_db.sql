@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS `Article` (
 
 CREATE TABLE IF NOT EXISTS `Author` (
   `AuthorId` int(11) NOT NULL AUTO_INCREMENT,
+  `UniqueName` char(10) DEFAULT '',
   `Name` char(30) DEFAULT '',
   `Image` char(255) DEFAULT '',
   `Active` tinyint(1) DEFAULT '1',

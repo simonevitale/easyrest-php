@@ -27,6 +27,7 @@ use \Jacwright\RestServer\RestException;
 include "libs/phpqrcode/qrlib.php"; 
 
 require_once("./EventsDatabaseHandler.php");
+require_once("./AuthorsDatabaseHandler.php");
 
 class EventsController extends EventsDatabaseHandler
 {
@@ -49,11 +50,14 @@ class EventsController extends EventsDatabaseHandler
 		
 		$filters = array();
 		$notFilters = array();
+			
+		$authorsDbHandler = new AuthorsDatabaseHandler;
 		
 		if(isset($_GET['userId']) && $_GET['userId'] != "") $filters[UserId] = $_GET['userId'];
 		if(isset($_GET['language']) && $_GET['language'] != "") $filters[Language] = $_GET['language'];
 		if(isset($_GET['published']) && $_GET['published'] != "") $filters[Published] = $_GET['published'];
-		
+		if(isset($_GET['author']) && $_GET['author'] != "") $filters[AuthorId] = $authorsDbHandler->AuthorByUniqueName($_GET['author'])[AuthorId];
+
 		if($authenticated == false || isset($_GET['userId'])) {
 			// If not authenticated shows only published events
 			$filters[Published] = 1;
@@ -119,8 +123,8 @@ class EventsController extends EventsDatabaseHandler
 		
 		echo $qrUrl;
 	}
-
-    /**
+	
+	/**
      * Update or Create Event
      * 
      * @url POST /event/update/
