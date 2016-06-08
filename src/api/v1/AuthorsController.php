@@ -87,7 +87,7 @@ class AuthorsController extends AuthorsDatabaseHandler
 		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userAuthorsFolder, false, false, true)."/"; 
 		
 		if(strlen($_POST['PictureAuthor']) == 0 || $isImageUploading) {
-			$this->unlinkRemovedAuthorImages($_POST['IdUser'], $author['Image']);
+			$this->unlinkRemovedAuthorImages($userId, $author['Image']);
 		}
 		
 		// Upload new image
@@ -114,7 +114,7 @@ class AuthorsController extends AuthorsDatabaseHandler
 		
 		if(parent::CheckIfOwned($userId, "Author", $authorId) == true) {
 			$authorInEventsCount = parent::GetRecordsCount('Event', $userId, 'AuthorId = '.$authorId);
-			$authorInArticlesCount = parent::GetRecordsCount('Article', $userId, 'AuthorId = '.authorId);
+			$authorInArticlesCount = parent::GetRecordsCount('Article', $userId, 'AuthorId = '.$authorId);
 			
 			if(($authorInEventsCount + $authorInArticlesCount) > 0) {
 				parent::DeActivateRecord('Author', $authorId);
