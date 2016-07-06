@@ -70,6 +70,9 @@ class Database {
 				trigger_error("Failed to connect to MySQL: " . mysql_connect_error(),
 					 E_USER_ERROR);
 			}
+			
+			// Change character set to utf8
+			mysqli_set_charset($this->_connection, "utf8");
 		}
 	}
 	
