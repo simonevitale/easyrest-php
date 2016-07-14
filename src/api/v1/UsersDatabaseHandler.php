@@ -28,12 +28,25 @@
  *
  * @author Simone Vitale
  */
+
+class Role {
+	public $IdRole	  = 0;
+	public $Name  	  = "";
+	public $Modules	  = null;
+	
+	public function __construct($id, $name, $modules) {
+        $this->IdRole  = $id;
+        $this->Name    = $name;
+		$this->Modules = explode(",", $modules);
+    }
+}
+
 class UsersDatabaseHandler extends DatabaseHandler
 {
 	public function UserById($userId) {
 		global $authIssueText;
 
-		$sql = "SELECT UserId, Email, Username, FirstName, LastName, Country, RegistrationDateTime, LastLoginDateTime, UserStateId, LoginAttempts, MobilePhone, Language, RoleId FROM User WHERE UserId = $userId";
+		$sql = "SELECT UserId, Email, Username, FirstName, LastName, Country, RegistrationDateTime, LastLoginDateTime, UserStateId, LoginAttempts, MobilePhone, Language, Role.RoleId, Role.Name AS RoleName, Role.Modules AS RoleModules FROM User, Role WHERE UserId = $userId AND User.RoleId = Role.RoleId";
 
 		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
@@ -55,7 +68,7 @@ class UsersDatabaseHandler extends DatabaseHandler
 							'LoginAttempts' => intval($row['LoginAttempts']),
 							'MobilePhone' => $row['MobilePhone'],
 							'Language' => $row['Language'],
-							'RoleId' => intval($row['RoleId']));
+							'Role' => new Role($row['RoleId'], $row['RoleName'], $row['RoleModules']));
 		}
 
 		return $data;
