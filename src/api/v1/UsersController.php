@@ -297,11 +297,15 @@ class UsersController extends UsersDatabaseHandler
 		$password = $_POST['OldPassword'];
 		$newPassword = $_POST['NewPassword'];
 		
+		if(strlen($password) == 0 || strlen($newPassword) == 0) {
+			throw new RestException(400, "Wrong or missing parameters.");
+		}
+		
 		$sql  = "UPDATE User SET ";
 		$sql .= " PasswordHash = '".$newPassword."' ";
 		$sql .= " WHERE UserId = $userId AND PasswordHash = '".$password."'";
 		
-		if($this->mysqli->query($sql) != null) {
+		if($this->mysqli->query($sql) != null && $this->mysqli->affected_rows > 0) {
 			return "OK";
 		} else {
 			throw new RestException(403, "Forbidden - Couldn't change the current password");
