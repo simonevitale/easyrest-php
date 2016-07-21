@@ -94,21 +94,21 @@ class ArticlesController extends ArticlesDatabaseHandler
 		
 		$userArticlesFolder = Settings::getInstance()->p['userArticlesFolder'];
 		
-		if(isset($_POST['IdArticle']) && is_numeric($_POST['IdArticle'])) {
-			$articleId = $_POST['IdArticle'];
+		if(isset($_POST['ArticleId']) && is_numeric($_POST['ArticleId'])) {
+			$articleId = $_POST['ArticleId'];
 		} else {
-			parent::CreateArticle($_POST['TitleArticle'], $_POST['IdUser']);
-			$articleId = parent::GetLastId("Article", $_POST['IdUser']);
+			parent::CreateArticle($_POST['Title'], $userId);
+			$articleId = parent::GetLastId("Article", $userId);
 		}
 		
 		parent::CheckIfOwned($userId, "Article", $articleId, true);
 		
 		$article = parent::ArticleById($articleId);
-		$isImageUploading = (isset($_FILES['NewImageArticle']) && is_uploaded_file($_FILES['NewImageArticle']['tmp_name'])) ? 1 : 0;
+		$isImageUploading = (isset($_FILES['NewImage']) && is_uploaded_file($_FILES['NewImage']['tmp_name'])) ? 1 : 0;
 		
 		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userArticlesFolder, false, false, true)."/"; 
 
-		if(strlen($_POST['ImageArticle']) == 0 || $isImageUploading) {
+		if(strlen($_POST['Image']) == 0 || $isImageUploading) {
 			$this->unlinkRemovedArticleImages($userId, $article['Image']);
 		}
 		
@@ -117,17 +117,20 @@ class ArticlesController extends ArticlesDatabaseHandler
 			$image = uploadImage($_FILES['NewImageArticle'], $destinationDirectory, 350);
 		}
 		
-		if(isset($_POST['TitleArticle'])) $article['Title'] = $_POST['TitleArticle'];
-		if(isset($_POST['ImageArticle']) && $isImageUploading != 1) $article["Image"] = $_POST['ImageArticle']; else $article["Image"] = $image;
-		if(isset($_POST['CategoriesArticle'])) $article['Category'] = $_POST['CategoriesArticle'];
-		if(isset($_POST['LanguagesArticle'])) $article['Language'] = $_POST['LanguagesArticle'];
-		if(isset($_POST['DescriptionArticle'])) $article['Description'] = $_POST['DescriptionArticle'];
-		if(isset($_POST['DateTimeArticle'])) $article['DateTime'] = $_POST['DateTimeArticle'];
-		if(isset($_POST['YouTubeLinkArticle'])) $article['YouTubeLink'] = $_POST['YouTubeLinkArticle'];
-		if(isset($_POST['FlickrLinkArticle'])) $article['FlickrLink'] = $_POST['FlickrLinkArticle'];
-		if(isset($_POST['PublishedArticle'])) $article['Published'] = $_POST['PublishedArticle'];
-		if($_POST['AuthorsArticle'] != null && is_numeric($_POST['AuthorsArticle']))
-			$article['AuthorId'] = $_POST['AuthorsArticle'];
+		$published = 0;
+		if(strcmp($_POST['Published'], "true") == 0 || $_POST['Published'] == 1) $published = 1;
+		
+		if(isset($_POST['Title'])) $article['Title'] = $_POST['Title'];
+		if(isset($_POST['Image']) && $isImageUploading != 1) $article["Image"] = $_POST['Image']; else $article["Image"] = $image;
+		if(isset($_POST['Category'])) $article['Category'] = $_POST['Category'];
+		if(isset($_POST['Language'])) $article['Language'] = $_POST['Language'];
+		if(isset($_POST['Description'])) $article['Description'] = $_POST['Description'];
+		if(isset($_POST['DateTime'])) $article['DateTime'] = $_POST['DateTime'];
+		if(isset($_POST['YouTubeLink'])) $article['YouTubeLink'] = $_POST['YouTubeLink'];
+		if(isset($_POST['FlickrLink'])) $article['FlickrLink'] = $_POST['FlickrLink'];
+		if(isset($_POST['Published'])) $article['Published'] = $published;
+		if($_POST['Author'] != null && is_numeric($_POST['Author']))
+			$article['AuthorId'] = $_POST['Author'];
 			
 		if($article['AuthorId'] === NULL) $article['AuthorId'] = 0;
 		
@@ -144,11 +147,11 @@ class ArticlesController extends ArticlesDatabaseHandler
     public function deleteArticle() {
 		$userId = parent::CheckAuthentication();
 		
-		if(parent::CheckIfOwned($userId, "Article", $_POST['IdArticle']) == true) {
-			$Article = parent::ArticleById($_POST['IdArticle']);
+		if(parent::CheckIfOwned($userId, "Article", $_POST['ArticleId']) == true) {
+			$Article = parent::ArticleById($_POST['ArticleId']);
 			
 			$this->unlinkRemovedArticleImages($userId, $Article['Image']);
-			parent::DeleteRecord('Article', 1, $_POST['IdArticle']);
+			parent::DeleteRecord('Article', 1, $_POST['ArticleId']);
 		}
 	}
 

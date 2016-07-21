@@ -316,15 +316,46 @@ class UsersController extends UsersDatabaseHandler
     public function updateUser() {
 		$userId = parent::CheckAuthentication();
 		
+		$userUserFolder = Settings::getInstance()->p['userUserFolder'];
+		
 		$user = parent::UserById($userId);
+		
+		$isImageUploading = (isset($_FILES['NewImage']) && is_uploaded_file($_FILES['NewImage']['tmp_name'])) ? 1 : 0;
+		
+		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userUserFolder, false, false, true)."/";
+
+		if(strlen($_POST['Image']) == 0 || $isImageUploading) {
+			$this->UnlinkRemovedUserImages($userId, $user['Image']);
+		}
+		
+		// Upload new image
+		if($isImageUploading == 1) {
+			$image = uploadImage($_FILES['NewImage'], $destinationDirectory, 350);
+		}
 		
 		if(isset($_POST['Username']))  $user["Username"] = $_POST['Username'];
 		if(isset($_POST['FirstName'])) $user["FirstName"] = $_POST['FirstName'];
 		if(isset($_POST['LastName']))  $user["LastName"] = $_POST['LastName'];
 		if(isset($_POST['Country']))   $user["Country"] = $_POST['Country'];
+		if(isset($_POST['Image']) && $isImageUploading != 1) $user["Image"] = $_POST['Image']; else $user["Image"] = $image;
 		if(isset($_POST['MobilePhone'])) $user["MobilePhone"] = $_POST['MobilePhone'];
 		if(isset($_POST['Language']))  $user["Language"] = $_POST['Language'];
 		
-		return (parent::DbUpdateUser($user) == true) ? $user : "ERROR";
+		// Return the up-to-date user
+		return (parent::DbUpdateUser($user) == true) ? parent::UserById($userId) : "ERROR";
+	}
+
+	private function UnlinkRemovedUserImages($userId, $image) {
+		$userUserFolder = Settings::getInstance()->p['userUserFolder'];
+		
+		$imageFileToRemove = "../../".parent::GetImageUrl($userId, $image, $userUserFolder, false, false);
+		$imageThumbnailFileToRemove = "../../".parent::GetImageUrl($userId, $image, $userUserFolder, true, false);
+		
+		if(strlen($image) > 0) {
+			if(file_exists($imageFileToRemove))
+				unlink($imageFileToRemove);
+			if(file_exists($imageThumbnailFileToRemove))
+				unlink($imageThumbnailFileToRemove);
+		}
 	}
 }

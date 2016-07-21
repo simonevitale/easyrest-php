@@ -60,28 +60,28 @@ class LocationsController extends LocationsDatabaseHandler
 		
 		global $authIssueText;
 		
-		if(isset($_POST['IdLocation']) && is_numeric($_POST['IdLocation'])) {
-			$locationId = $_POST['IdLocation'];
+		if(isset($_POST['LocationId']) && is_numeric($_POST['LocationId'])) {
+			$locationId = $_POST['LocationId'];
 		} else {
-			parent::CreateLocation($_POST['NameLocation'], $userId);
+			parent::CreateLocation($_POST['Name'], $userId);
 			$locationId = parent::GetLastId("Location", $userId);
 		}
 		
 		parent::CheckIfOwned($userId, "Location", $locationId, true);
 		
 		$sql  = "UPDATE Location SET";
-		$sql .= "  Name = \"".$this->mysqli->real_escape_string($_POST['NameLocation'])."\"";
-		$sql .= ", Address1 = \"".$this->mysqli->real_escape_string($_POST['Address1Location'])."\"";
-		$sql .= ", Address2 = \"".$this->mysqli->real_escape_string($_POST['Address2Location'])."\"";
-		$sql .= ", PostCode = \"".$_POST['PostCodeLocation']."\"";
-		$sql .= ", City = \"".$this->mysqli->real_escape_string($_POST['CityLocation'])."\"";
-		$sql .= ", Country = \"".$_POST['CountriesLocation']."\"";
-		$sql .= ", Description = \"".$this->mysqli->real_escape_string($_POST['DescriptionLocation'])."\"";
-		$sql .= ", Phone = \"".$_POST['PhoneLocation']."\"";
-		$sql .= ", Email = \"".$_POST['EmailLocation']."\"";
-		$sql .= ", WebsiteLink = \"".$_POST['WebsiteLinkLocation']."\"";
-		$sql .= ", FacebookLink = \"".$_POST['FacebookLinkLocation']."\"";
-		$sql .= ", FlickrLink = \"".$_POST['FlickrLinkLocation']."\"";
+		$sql .= "  Name = \"".$this->mysqli->real_escape_string($_POST['Name'])."\"";
+		$sql .= ", Address1 = \"".$this->mysqli->real_escape_string($_POST['Address1'])."\"";
+		$sql .= ", Address2 = \"".$this->mysqli->real_escape_string($_POST['Address2'])."\"";
+		$sql .= ", PostCode = \"".$_POST['PostCode']."\"";
+		$sql .= ", City = \"".$this->mysqli->real_escape_string($_POST['City'])."\"";
+		$sql .= ", Country = \"".$_POST['Country']."\"";
+		$sql .= ", Description = \"".$this->mysqli->real_escape_string($_POST['Description'])."\"";
+		$sql .= ", Phone = \"".$_POST['Phone']."\"";
+		$sql .= ", Email = \"".$_POST['Email']."\"";
+		$sql .= ", WebsiteLink = \"".$_POST['WebsiteLink']."\"";
+		$sql .= ", FacebookLink = \"".$_POST['FacebookLink']."\"";
+		$sql .= ", FlickrLink = \"".$_POST['FlickrLink']."\"";
 		$sql .= " WHERE LocationId = ".$locationId;
 		
 		$result = $this->mysqli->query($sql) or die ($authIssueText);
@@ -97,12 +97,12 @@ class LocationsController extends LocationsDatabaseHandler
     public function deleteLocation() {
 		$userId = parent::CheckAuthentication();
 		
-		$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$_POST['IdLocation']);
+		$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$_POST['LocationId']);
 		
 		if($locationInEventsCount > 0) {
-			parent::DeActivateRecord('Location', $_POST['IdLocation']);
+			parent::DeActivateRecord('Location', $_POST['LocationId']);
 		} else {
-			parent::DeleteRecord('Location', $userId, $_POST['IdLocation']);
+			parent::DeleteRecord('Location', $userId, $_POST['LocationId']);
 		}
 	}
 }

@@ -134,42 +134,45 @@ class EventsController extends EventsDatabaseHandler
 		
 		$userEventsFolder = Settings::getInstance()->p['userEventsFolder'];
 		
-		if(isset($_POST['IdEvent']) && is_numeric($_POST['IdEvent'])) {
-			$eventId = $_POST['IdEvent'];
+		if(isset($_POST['EventId']) && is_numeric($_POST['EventId'])) {
+			$eventId = $_POST['EventId'];
 		} else {
-			parent::CreateEvent($_POST['TitleEvent'], $userId);
+			parent::CreateEvent($_POST['Title'], $userId);
 			$eventId = parent::GetLastId("Event", $userId);
 		}
 		
 		parent::CheckIfOwned($userId, "Event", $eventId, true);
 		
 		$event = parent::EventById($eventId);
-		$isImageUploading = (isset($_FILES['NewImageEvent']) && is_uploaded_file($_FILES['NewImageEvent']['tmp_name'])) ? 1 : 0;
+		$isImageUploading = (isset($_FILES['NewImage']) && is_uploaded_file($_FILES['NewImage']['tmp_name'])) ? 1 : 0;
 		
-		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userEventsFolder, false, false, true)."/"; 
+		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userEventsFolder, false, false, true)."/";
 
-		if(strlen($_POST['ImageEvent']) == 0 || $isImageUploading) {
+		if(strlen($_POST['User']) == 0 || $isImageUploading) {
 			$this->UnlinkRemovedEventImages($userId, $event['Image']);
 		}
 		
 		// Upload new image
 		if($isImageUploading == 1) {
-			$image = uploadImage($_FILES['NewImageEvent'], $destinationDirectory, 350);
+			$image = uploadImage($_FILES['NewImage'], $destinationDirectory, 350);
 		}
 		
-		if(isset($_POST['TitleEvent'])) $event["Title"] = $_POST['TitleEvent'];
-		if(isset($_POST['ImageEvent']) && $isImageUploading != 1) $event["Image"] = $_POST['ImageEvent']; else $event["Image"] = $image;
-		if(isset($_POST['LanguagesEvent'])) $event["Language"] = $_POST['LanguagesEvent'];
-		if(isset($_POST['DescriptionEvent'])) $event["Description"] = $_POST['DescriptionEvent'];
-		if(isset($_POST['DateTimeEvent'])) $event["DateTime"] = $_POST['DateTimeEvent'];
-		if(isset($_POST['FacebookLinkEvent'])) $event["FacebookLink"] = $_POST['FacebookLinkEvent'];
-		if(isset($_POST['YouTubeLinkEvent'])) $event["YouTubeLink"] = $_POST['YouTubeLinkEvent'];
-		if(isset($_POST['FlickrLinkEvent'])) $event["FlickrLink"] = $_POST['FlickrLinkEvent'];
-		if(isset($_POST['PublishedEvent'])) $event["Published"] = $_POST['PublishedEvent'];
-		if(isset($_POST['LocationsEvent']) && is_numeric($_POST['LocationsEvent']))
-			$event["LocationId"] = $_POST['LocationsEvent'];
-		if(isset($_POST['AuthorsEvent']) && is_numeric($_POST['AuthorsEvent']))
-			$event["AuthorId"] = $_POST['AuthorsEvent'];
+		$published = 0;
+		if(strcmp($_POST['Published'], "true") == 0 || $_POST['Published'] == 1) $published = 1;
+		
+		if(isset($_POST['Title'])) $event["Title"] = $_POST['Title'];
+		if(isset($_POST['Image']) && $isImageUploading != 1) $event["Image"] = $_POST['Image']; else $event["Image"] = $image;
+		if(isset($_POST['Language'])) $event["Language"] = $_POST['Language'];
+		if(isset($_POST['Description'])) $event["Description"] = $_POST['Description'];
+		if(isset($_POST['DateTime'])) $event["DateTime"] = $_POST['DateTime'];
+		if(isset($_POST['FacebookLink'])) $event["FacebookLink"] = $_POST['FacebookLink'];
+		if(isset($_POST['YouTubeLink'])) $event["YouTubeLink"] = $_POST['YouTubeLink'];
+		if(isset($_POST['FlickrLink'])) $event["FlickrLink"] = $_POST['FlickrLink'];
+		if(isset($_POST['Published'])) $event["Published"] = $published;
+		if(isset($_POST['LocationId']) && is_numeric($_POST['LocationId']))
+			$event["LocationId"] = $_POST['LocationId'];
+		if(isset($_POST['AuthorId']) && is_numeric($_POST['AuthorId']))
+			$event["AuthorId"] = $_POST['AuthorId'];
 		
 		if($event['LocationId'] === NULL) $event['LocationId'] = 0;
 		if($event['AuthorId'] === NULL) $event['AuthorId'] = 0;
@@ -187,11 +190,11 @@ class EventsController extends EventsDatabaseHandler
     public function deleteEvent() {
 		$userId = parent::CheckAuthentication();
 		
-		if(parent::CheckIfOwned($userId, "Event", $_POST['IdEvent']) == true) {
-			$Event = parent::EventById($_POST['IdEvent']);
+		if(parent::CheckIfOwned($userId, "Event", $_POST['EventId']) == true) {
+			$Event = parent::EventById($_POST['EventId']);
 			
 			$this->UnlinkRemovedEventImages($userId, $Event['Image']);
-			parent::DeleteRecord('Event', $_POST['IdUser'], $_POST['IdEvent']);
+			parent::DeleteRecord('Event', $_POST['UserId'], $_POST['EventId']);
 		}
 	}
 

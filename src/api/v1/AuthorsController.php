@@ -62,40 +62,41 @@ class AuthorsController extends AuthorsDatabaseHandler
      * Update Author
      * 
      * @url POST /author/update/
+	 * @params AuthorId, Name, UniqueName, Image
      */
     public function updateAuthor() {
 		$userId = parent::CheckAuthentication(true);
 		
 		$userAuthorsFolder = Settings::getInstance()->p['userAuthorsFolder'];
 		
-		if(isset($_POST['IdAuthor']) && is_numeric($_POST['IdAuthor'])) {
-			$authorId = $_POST['IdAuthor'];
+		if(isset($_POST['AuthorId']) && is_numeric($_POST['AuthorId'])) {
+			$authorId = $_POST['AuthorId'];
 		} else {
-			parent::CreateAuthor($_POST['NameAuthor'], $userId);
+			parent::CreateAuthor($_POST['Name'], $userId);
 			$authorId = parent::GetLastId("Author", $userId);
 		}
 	
 		$author = parent::AuthorById($authorId);
 		
-		if(strlen($_POST['IdName']) > 0 && parent::CheckIfIdNameExists($_POST['IdName'])) {
+		if(strlen($_POST['UniqueName']) > 0 && parent::CheckIfIdNameExists($_POST['UniqueName'])) {
 			throw new RestException(405, "Unauthorized. The selected id name already exists.");
 		}
 		
-		$isImageUploading = (isset($_FILES['NewPictureAuthor']) && is_uploaded_file($_FILES['NewPictureAuthor']['tmp_name'])) ? 1 : 0;
-		$image = $_POST['PictureAuthor'];
+		$isImageUploading = (file_exists($_FILES['NewImage']['tmp_name']) && isset($_FILES['NewImage']) && is_uploaded_file($_FILES['NewImage']['tmp_name'])) ? 1 : 0;
+		$image = $_POST['Image'];
 		
 		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userAuthorsFolder, false, false, true)."/"; 
 		
-		if(strlen($_POST['PictureAuthor']) == 0 || $isImageUploading) {
-			$this->unlinkRemovedAuthorImages($_POST['IdUser'], $author['Image']);
+		if(strlen($_POST['Image']) == 0 || $isImageUploading) {
+			$this->unlinkRemovedAuthorImages($userId, $author['Image']);
 		}
 		
 		// Upload new image
 		if($isImageUploading == 1) {
-			$image = uploadImage($_FILES['NewPictureAuthor'], $destinationDirectory, 200);
+			$image = uploadImage($_FILES['NewImage'], $destinationDirectory, 200);
 		}
 		
-		$author['Name'] = $_POST['NameAuthor'];
+		$author['Name'] = $_POST['Name'];
 		$author['Image'] = $image;
 			
 		parent::DbUpdateAuthor($author);
@@ -110,7 +111,7 @@ class AuthorsController extends AuthorsDatabaseHandler
      */
     public function deleteAuthor() {
 		$userId = parent::CheckAuthentication();
-		$authorId = $_POST['IdAuthor'];
+		$authorId = $_POST['AuthorId'];
 		
 		if(parent::CheckIfOwned($userId, "Author", $authorId) == true) {
 			$authorInEventsCount = parent::GetRecordsCount('Event', $userId, 'AuthorId = '.$authorId);
@@ -124,6 +125,8 @@ class AuthorsController extends AuthorsDatabaseHandler
 				$this->unlinkRemovedAuthorImages($userId, $Author[Image]);
 				parent::DeleteRecord('Author', $userId, $authorId);
 			}
+			
+			return "OK";
 		}
 	}
 
