@@ -112,23 +112,25 @@ class DatabaseHandler
 		
 		$url = "";
 		
-		if($absolutePath == true) {
-			$url .= "$websiteUrl/$portalFolder/";
-		}
-		$url .= "$userUploadFolder";
-		if (!file_exists($url)) {
-			mkdir($url, 0777, true);
-		}
-		$url .= "/$userId";
-		if (!file_exists($url)) {
-			mkdir($url, 0777, true);
-		}
-		$url .= "/$folder";
-		if (!file_exists($url)) {
-			mkdir($url, 0777, true);
-		}
-		if(strlen($image) > 0 && $pathOnly == false) {
-			$url .= ("/".(($thumbnail == true) ? $thumbnailPrefix : "").$image);
+		if(strlen($image) > 0 || $pathOnly == true) {
+			if($absolutePath == true) {
+				$url .= "$websiteUrl/$portalFolder/";
+			}
+			$url .= "$userUploadFolder";
+			if (!file_exists($url)) {
+				mkdir($url, 0777, true);
+			}
+			$url .= "/$userId";
+			if (!file_exists($url)) {
+				mkdir($url, 0777, true);
+			}
+			$url .= "/$folder";
+			if (!file_exists($url)) {
+				mkdir($url, 0777, true);
+			}
+			if(strlen($image) > 0 && $pathOnly == false) {
+				$url .= ("/".(($thumbnail == true) ? $thumbnailPrefix : "").$image);
+			}
 		}
 		
 		return $url;
