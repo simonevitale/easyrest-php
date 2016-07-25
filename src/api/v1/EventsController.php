@@ -148,7 +148,7 @@ class EventsController extends EventsDatabaseHandler
 		
 		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userEventsFolder, false, false, true)."/";
 
-		if(strlen($_POST['User']) == 0 || $isImageUploading) {
+		if(strlen($_POST['Image']) == 0 || $isImageUploading) {
 			$this->UnlinkRemovedEventImages($userId, $event['Image']);
 		}
 		
@@ -158,7 +158,7 @@ class EventsController extends EventsDatabaseHandler
 		}
 		
 		$published = 0;
-		if(strcmp($_POST['Published'], "true") == 0 || $_POST['Published'] == 1) $published = 1;
+		if(strcmp($_POST['Published'], "true") == 0 || $_POST['Published'] == 1 || $_POST['Published'] == true) $published = 1;
 		
 		if(isset($_POST['Title'])) $event["Title"] = $_POST['Title'];
 		if(isset($_POST['Image']) && $isImageUploading != 1) $event["Image"] = $_POST['Image']; else $event["Image"] = $image;
