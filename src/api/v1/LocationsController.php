@@ -88,21 +88,26 @@ class LocationsController extends LocationsDatabaseHandler
 		
 		return $locationId;
 	}
-	
+		
     /**
-     * Delete Location
+     * Delete Author
      * 
      * @url POST /location/delete/
      */
     public function deleteLocation() {
 		$userId = parent::CheckAuthentication();
+		$locationId = $_POST['LocationId'];
 		
-		$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$_POST['LocationId']);
-		
-		if($locationInEventsCount > 0) {
-			parent::DeActivateRecord('Location', $_POST['LocationId']);
-		} else {
-			parent::DeleteRecord('Location', $userId, $_POST['LocationId']);
+		if(parent::CheckIfOwned($userId, "Location", $locationId) == true) {
+			$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$locationId);
+			
+			if($locationInEventsCount > 0) {
+				parent::DeActivateRecord('Location', $locationId);
+			} else {
+				parent::DeleteRecord('Location', $userId, $locationId);
+			}
+			
+			return "OK";
 		}
 	}
 }

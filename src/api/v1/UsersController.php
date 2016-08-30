@@ -28,6 +28,8 @@ use \Jacwright\RestServer\RestException;
 require_once("UsersDatabaseHandler.php");
 require_once("functions.php");
 
+require 'libs/PHPMailer/PHPMailerAutoload.php';
+
 class UsersController extends UsersDatabaseHandler
 {
     /**
@@ -39,7 +41,7 @@ class UsersController extends UsersDatabaseHandler
 		global $messages, $authIssueText;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
-		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
+		//$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
 		
 		$email    = $_POST['email'];
 		$password = $_POST['password'];
@@ -49,7 +51,7 @@ class UsersController extends UsersDatabaseHandler
 			throw new RestException(400, "Wrong or missing parameters.");
 		}
 	
-		$language = "en";
+		$language = "it";// Settings::getInstance()->p['language'];
 	
 		$sql = "SELECT UserStateId FROM User WHERE Email = '$email'";
 		$result = $this->mysqli->query($sql) or die ($authIssueText);
@@ -67,18 +69,34 @@ class UsersController extends UsersDatabaseHandler
 				$newUserMessage = $messages[$language]["createUserMessage"];
 				$newUserMessage = str_replace("<<SendTo>>", $email, $newUserMessage);
 				$newUserMessage = str_replace("<<RegistrationCode>>", $registrationCode, $newUserMessage);
-						
-				$headers =  "From: $websiteName <".$eMailSendFrom.">\r\n" .
-							"Reply-To: $websiteName <".$eMailSendFrom.">\r\n" .
-							"Return-Path: $websiteName <".$eMailSendFrom.">\r\n" .
-							"Organization: $websiteName\r\n" .
-							"MIME-Version: 1.0\r\n" .
-							"Content-type: text/plain; charset=iso-8859-1\r\n" .
-							"X-Priority: 3\r\n" .
-							"X-Mailer: PHP/" . phpversion();
-							
-				mail($email, "$websiteName Account", $newUserMessage, $headers);
 				
+				$mailer = new PHPMailer;
+				
+				$mailer->isSMTP();                                      			// Set mailer to use SMTP
+				$mailer->Host = Settings::getInstance()->p['emailHost'];			// Specify main and backup SMTP servers
+				$mailer->SMTPAuth = true;                               			// Enable SMTP authentication
+				$mailer->Username = Settings::getInstance()->p['email'];			// SMTP username
+				$mailer->Password = Settings::getInstance()->p['emailPassword'];	// SMTP password
+				//$mailer->SMTPSecure = 'tls';                            			// Enable TLS encryption, `ssl` also accepted
+				$mailer->Port = Settings::getInstance()->p['emailPort'];			// TCP port to connect to
+
+				$mailer->setFrom(Settings::getInstance()->p['email'], 'Support');
+				$mailer->addAddress($email);
+				$mailer->addReplyTo(Settings::getInstance()->p['email'], 'Information');
+				
+				$mailer->isHTML(false);                                  			// Set email format to HTML
+
+				$mailer->Subject = $websiteName. ' ';
+				$mailer->Body    = $newUserMessage; // HTML message body <b>in bold!</b>
+				$mailer->AltBody = $newUserMessage; // Plain text body for non-HTML mail clients
+
+				if(!$mailer->send()) {
+					echo 'Message could not be sent.';
+					echo 'Mailer Error: ' . $mailer->ErrorInfo;
+					
+					return "ERROR";
+				}
+
 				return "OK";
 			}
 		}
@@ -100,18 +118,33 @@ class UsersController extends UsersDatabaseHandler
 		$message .= "\n\n".$_POST["message"];
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
-		$supportEmail = Settings::getInstance()->p['supportEmail'];
-				
-		$headers =  "From: $name via $websiteName <".$eMailFrom.">\r\n" .
-					"Reply-To: $name <".$eMailFrom.">\r\n" .
-					"Return-Path: $websiteName <".$eMailFrom.">\r\n" .
-					"Organization: $websiteName\r\n" .
-					"MIME-Version: 1.0\r\n" .
-					"Content-type: text/plain; charset=iso-8859-1\r\n" .
-					"X-Priority: 3\r\n" .
-					"X-Mailer: PHP/" . phpversion();
 		
-		mail($supportEmail, "$websiteName Account", $message, $headers);
+		$mailer = new PHPMailer;
+		
+		$mailer->isSMTP();                                      			// Set mailer to use SMTP
+		$mailer->Host = Settings::getInstance()->p['emailHost'];			// Specify main and backup SMTP servers
+		$mailer->SMTPAuth = true;                               			// Enable SMTP authentication
+		$mailer->Username = Settings::getInstance()->p['email'];			// SMTP username
+		$mailer->Password = Settings::getInstance()->p['emailPassword'];	// SMTP password
+		//$mailer->SMTPSecure = 'tls';                            			// Enable TLS encryption, `ssl` also accepted
+		$mailer->Port = Settings::getInstance()->p['emailPort'];			// TCP port to connect to
+
+		$mailer->setFrom(Settings::getInstance()->p['email'], 'Support');
+		$mailer->addAddress($eMailFrom);
+		$mailer->addReplyTo($eMailFrom, 'Information');
+		
+		$mailer->isHTML(false);                                  				// Set email format to HTML
+
+		$mailer->Subject = $websiteName. ' ';
+		$mailer->Body    = $message; // HTML message body <b>in bold!</b>
+		$mailer->AltBody = $message; // Plain text body for non-HTML mail clients
+
+		if(!$mailer->send()) {
+			echo 'Message could not be sent.';
+			echo 'Mailer Error: ' . $mailer->ErrorInfo;
+			
+			return "ERROR";
+		}
 		
 		return "OK";
 	}
@@ -184,7 +217,6 @@ class UsersController extends UsersDatabaseHandler
 		global $messages;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
-		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
 		
 		$email = $_POST['email'];
 		
@@ -208,17 +240,34 @@ class UsersController extends UsersDatabaseHandler
 			$forgotPasswordMessage = str_replace("<<IdUser>>", $row['UserId'], $messages[$row[1]]["forgotPasswordMessage"]);
 			$forgotPasswordMessage = str_replace("<<ResetCode>>", $resetCode, $forgotPasswordMessage);
 			$forgotPasswordMessage = str_replace("<<SendTo>>", $email, $forgotPasswordMessage);
-						
-			$headers =  "From: $websiteName <".$eMailSendFrom.">\r\n" .
-						"Reply-To: $websiteName <".$eMailSendFrom.">\r\n" .
-						"Return-Path: $websiteName <".$eMailSendFrom.">\r\n" .
-						"Organization: $websiteName\r\n" .
-						"MIME-Version: 1.0\r\n" .
-						"Content-type: text/plain; charset=iso-8859-1\r\n" .
-						"X-Priority: 3\r\n" .
-						"X-Mailer: PHP/" . phpversion();
-						
-			mail($email, $websiteName." Forgot Password", $forgotPasswordMessage, $headers);
+			
+			$mailer = new PHPMailer;
+			
+			$mailer->isSMTP();                                      			// Set mailer to use SMTP
+			$mailer->Host = Settings::getInstance()->p['emailHost'];			// Specify main and backup SMTP servers
+			$mailer->SMTPAuth = true;                               			// Enable SMTP authentication
+			$mailer->Username = Settings::getInstance()->p['email'];			// SMTP username
+			$mailer->Password = Settings::getInstance()->p['emailPassword'];	// SMTP password
+			//$mailer->SMTPSecure = 'tls';                            			// Enable TLS encryption, `ssl` also accepted
+			$mailer->Port = Settings::getInstance()->p['emailPort'];			// TCP port to connect to
+
+			$mailer->setFrom(Settings::getInstance()->p['email'], 'Support');
+			$mailer->addAddress($email);
+			
+			$mailer->isHTML(false);                                  			// Set email format to HTML
+
+			$mailer->Subject = $websiteName. ' ';
+			$mailer->Body    = $forgotPasswordMessage; // HTML message body <b>in bold!</b>
+			$mailer->AltBody = $forgotPasswordMessage; // Plain text body for non-HTML mail clients
+
+			//$mailer->SMTPDebug = 1;
+
+			if(!$mailer->send()) {
+				echo 'Message could not be sent.';
+				echo 'Mailer Error: ' . $mailer->ErrorInfo;
+				
+				return "ERROR";
+			}
 			
 			return "OK";
 		} else {
@@ -236,7 +285,6 @@ class UsersController extends UsersDatabaseHandler
 		global $messages;
 		
 		$websiteName = Settings::getInstance()->p['websiteName'];
-		$eMailSendFrom = Settings::getInstance()->p['supportEmail'];
 		
 		if($idUser != null && $code != null) {
 			$sql = "SELECT Email, PasswordResetDateTime, Language FROM User WHERE PasswordResetToken = '$code' AND UserId = $idUser";
@@ -266,16 +314,31 @@ class UsersController extends UsersDatabaseHandler
 					$resetPasswordMessage = str_replace("<<NewPassword>>", $newPassword, $messages[$row[2]]["resetPasswordMessage"]);
 					$resetPasswordMessage = str_replace("<<SendTo>>", $sendTo, $resetPasswordMessage);
 					
-					$headers =  "From: $websiteName <".$eMailSendFrom.">\r\n" .
-								"Reply-To: $websiteName <".$eMailSendFrom.">\r\n" .
-								"Return-Path: $websiteName <".$eMailSendFrom.">\r\n" .
-								"Organization: $websiteName\r\n" .
-								"MIME-Version: 1.0\r\n" .
-								"Content-type: text/plain; charset=iso-8859-1\r\n" .
-								"X-Priority: 3\r\n" .
-								"X-Mailer: PHP/" . phpversion();
-								
-					mail($sendTo, $websiteName." Reset Password", $resetPasswordMessage, $headers);
+					$mailer = new PHPMailer;
+					
+					$mailer->isSMTP();                                      			// Set mailer to use SMTP
+					$mailer->Host = Settings::getInstance()->p['emailHost'];			// Specify main and backup SMTP servers
+					$mailer->SMTPAuth = true;                               			// Enable SMTP authentication
+					$mailer->Username = Settings::getInstance()->p['email'];			// SMTP username
+					$mailer->Password = Settings::getInstance()->p['emailPassword'];	// SMTP password
+					//$mailer->SMTPSecure = 'tls';                            			// Enable TLS encryption, `ssl` also accepted
+					$mailer->Port = Settings::getInstance()->p['emailPort'];			// TCP port to connect to
+
+					$mailer->setFrom(Settings::getInstance()->p['email'], 'Support');
+					$mailer->addAddress($sendTo);
+					
+					$mailer->isHTML(false);                                  			// Set email format to HTML
+
+					$mailer->Subject = $websiteName. ' ';
+					$mailer->Body    = $resetPasswordMessage; // HTML message body <b>in bold!</b>
+					$mailer->AltBody = $resetPasswordMessage; // Plain text body for non-HTML mail clients
+
+					if(!$mailer->send()) {
+						echo 'Message could not be sent.';
+						echo 'Mailer Error: ' . $mailer->ErrorInfo;
+						
+						return "ERROR";
+					}
 					
 					return "OK";
 				} else {
@@ -293,7 +356,7 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/changepassword
      */
     public function changePassword() {
-		$userId = $_POST['IdUser'];
+		$userId = $_POST['UserId'];
 		$password = $_POST['OldPassword'];
 		$newPassword = $_POST['NewPassword'];
 		

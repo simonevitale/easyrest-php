@@ -151,7 +151,9 @@ class ArticlesController extends ArticlesDatabaseHandler
 			$Article = parent::ArticleById($_POST['ArticleId']);
 			
 			$this->unlinkRemovedArticleImages($userId, $Article['Image']);
-			parent::DeleteRecord('Article', 1, $_POST['ArticleId']);
+			parent::DeleteRecord('Article', $userId, $_POST['ArticleId']);
+			
+			return "OK";
 		}
 	}
 

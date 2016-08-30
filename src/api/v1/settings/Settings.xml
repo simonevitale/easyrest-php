@@ -6,6 +6,10 @@
 	<websiteName>[YOUR WEBSITE NAME (e.g. "example")]</websiteName>
 	<websiteDomain>[YOUR WEBSITE DOMAIN (e.g. "example.com")]</websiteDomain>
 	<supportEmail>[YOUR SUPPORT EMAIL (e.g. "support@example.com")]</supportEmail>
+	<email>[YOUR TECHNICAL EMAIL (e.g. "noreply@example.com")]</email>
+	<emailHost>[YOUR SUPPORT EMAIL HOST]</emailHost>
+	<emailPort>[YOUR SUPPORT EMAIL PORT]</emailPort>
+	<emailPassword>[YOUR SUPPORT EMAIL PASSWORD]</emailPassword>
 	
 	<portalFolder>portal</portalFolder>
 	<userUploadFolder>uploads</userUploadFolder>

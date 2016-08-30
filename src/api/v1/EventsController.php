@@ -194,7 +194,9 @@ class EventsController extends EventsDatabaseHandler
 			$Event = parent::EventById($_POST['EventId']);
 			
 			$this->UnlinkRemovedEventImages($userId, $Event['Image']);
-			parent::DeleteRecord('Event', $_POST['UserId'], $_POST['EventId']);
+			parent::DeleteRecord('Event', $userId, $_POST['EventId']);
+			
+			return "OK";
 		}
 	}
 

@@ -48,7 +48,9 @@ $messages = array(
 									"If you requested an account, please confirm clicking on the following link or copy and paste the text into your browser address bar by 24 hours to complete the registration:\r\n\r\n" .
 									"$websiteUrl/portal/client/ConfirmAccount?email=<<SendTo>>&code=<<RegistrationCode>>\r\n\r\n" .
 									"If you didn't, please ignore this message.\r\n\r\n" .
-									"Thanks,\r\n\r\n$websiteName Support Team\r\n"
+									"Thanks,\r\n\r\n$websiteName Support Team\r\n",
+									
+		"signUpMailSubject" => 		"new account"
 		
 	),
 	
@@ -67,7 +69,9 @@ $messages = array(
 									"Clicca sul link seguente o copia e incollalo nella barra degli indirizzi del tuo browser entro 24 ore per completare la registrazione:\r\n\r\n" .
 									"$websiteUrl/portal/client/ConfirmAccount?email=<<SendTo>>&code=<<RegistrationCode>>\r\n\r\n" .
 									"Se non avessi richiesto la registrazione, per cortesia ignora questo messaggio.\r\n\r\n" .
-									"Grazie,\r\n\r\n$websiteName Support Team\r\n"
+									"Grazie,\r\n\r\n$websiteName Support Team\r\n",
+									
+		"signUpMailSubject" => 		"nuovo account"
 	)
 );
 	
