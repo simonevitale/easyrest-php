@@ -130,10 +130,10 @@ class UsersController extends UsersDatabaseHandler
 		$mailer->Port = Settings::getInstance()->p['emailPort'];			// TCP port to connect to
 
 		$mailer->setFrom(Settings::getInstance()->p['email'], 'Support');
-		$mailer->addAddress($eMailFrom);
+		$mailer->addAddress(Settings::getInstance()->p['contactEmail']);
 		$mailer->addReplyTo($eMailFrom, 'Information');
 		
-		$mailer->isHTML(false);                                  				// Set email format to HTML
+		$mailer->isHTML(true);                                  				// Set email format to HTML
 
 		$mailer->Subject = $websiteName. ' ';
 		$mailer->Body    = $message; // HTML message body <b>in bold!</b>
