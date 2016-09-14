@@ -293,7 +293,7 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/changepassword
      */
     public function changePassword() {
-		$userId = $_POST['IdUser'];
+		$userId = $_POST['UserId'];
 		$password = $_POST['OldPassword'];
 		$newPassword = $_POST['NewPassword'];
 		
@@ -302,14 +302,18 @@ class UsersController extends UsersDatabaseHandler
 		}
 		
 		$sql  = "UPDATE User SET ";
-		$sql .= " PasswordHash = '".$newPassword."' ";
-		$sql .= " WHERE UserId = $userId AND PasswordHash = '".$password."'";
+		$sql .= "PasswordHash = '".$newPassword."' ";
+		$sql .= "WHERE UserId = $userId AND PasswordHash = '".$password."'";
 		
-		if($this->mysqli->query($sql) != null && $this->mysqli->affected_rows > 0) {
+		$action = $this->mysqli->query($sql);
+		
+		if($action != null && $this->mysqli->affected_rows > 0) {
 			return "OK";
 		} else {
 			throw new RestException(403, "Forbidden - Couldn't change the current password");
 		}
+		
+		throw new RestException(403, "Forbidden - Couldn't change the current password");
 	}
 
     /**
