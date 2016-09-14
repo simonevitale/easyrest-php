@@ -54,7 +54,7 @@ class ArticlesController extends ArticlesDatabaseHandler
 		if(isset($_GET['published']) && $_GET['published'] != "") $filters[Published] = $_GET['published'];
 		if(isset($_GET['category']) && $_GET['category'] != "")   $filters[Category]  = $_GET['category'];
 		
-		if(isset($_GET['exceptCategory']) && $_GET['exceptCategory'] != "") $notFilters[ExceptCategory] = $_GET['exceptCategory'];
+		if(isset($_GET['exceptCategory']) && $_GET['exceptCategory'] != "") $notFilters[Category] = $_GET['exceptCategory'];
 		
 		if($authenticated == false || isset($_GET['userId'])) {
 			// If not authenticated shows only published articles
@@ -151,7 +151,9 @@ class ArticlesController extends ArticlesDatabaseHandler
 			$Article = parent::ArticleById($_POST['ArticleId']);
 			
 			$this->unlinkRemovedArticleImages($userId, $Article['Image']);
-			parent::DeleteRecord('Article', 1, $_POST['ArticleId']);
+			parent::DeleteRecord('Article', $userId, $_POST['ArticleId']);
+			
+			return "OK";
 		}
 	}
 

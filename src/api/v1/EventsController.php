@@ -112,8 +112,14 @@ class EventsController extends EventsDatabaseHandler
 		$qrPrefix = "qr.event.";
 		$qrExt = ".png";
 		$qrFilename = $qrPrefix."$ecc.$size.".$eventId.$qrExt;
-		$qrRelUrl = "../../$userUploadFolder/".$event['UserId']."/".$userEventsFolder."/".$qrFilename;
+		$qrRelPath = "../../$userUploadFolder/".$event['UserId']."/".$userEventsFolder;
+		$qrRelUrl = $qrRelPath."/".$qrFilename;
 		$qrUrl = $websiteUrl."/".$portalFolder."/".$userUploadFolder."/".$event['UserId']."/".$userEventsFolder."/".$qrFilename;
+		
+		// Create events directory if it doesn't exist
+		if (!file_exists($qrRelPath)) {
+			mkdir($qrRelPath, 0777, true);
+		}
 		
 		$data = $websiteUrl."/".$userEventsFolder."/".$eventId;
 		
@@ -194,7 +200,9 @@ class EventsController extends EventsDatabaseHandler
 			$Event = parent::EventById($_POST['EventId']);
 			
 			$this->UnlinkRemovedEventImages($userId, $Event['Image']);
-			parent::DeleteRecord('Event', $_POST['UserId'], $_POST['EventId']);
+			parent::DeleteRecord('Event', $userId, $_POST['EventId']);
+			
+			return "OK";
 		}
 	}
 
