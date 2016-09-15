@@ -49,15 +49,12 @@ class ArticlesDatabaseHandler extends DatabaseHandler
 		// Apply Filters
 		if($filters != null) {
 			foreach ($filters as $key => $value) {
-				// Language filter shows also records with no set language
-				if(strcmp($key, "Language") == 0)
-					$sql .= " AND (";
+				// -orblank postfix for language filter shows also records with no set language
+				$orBlankIndex = strpos($value, '-orblank');
+				if(strcmp($key, "Language") == 0 && $orBlankIndex !== false)
+					$sql .= " AND (Article.$key = '".substr($value, 2)."' OR Article.$key = '')";
 				else
-					$sql .= " AND ";
-				$sql .= " Article.$key = '$value' ";
-				
-				if(strcmp($key, "Language") == 0)
-					$sql .= " OR Article.$key = '') ";
+					$sql .= " AND Article.$key = '$value' ";
 			}
 			foreach ($notFilters as $key => $value) {
 				$sql .= " AND Article.$key <> '$value' ";
