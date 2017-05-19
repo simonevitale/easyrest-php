@@ -24,47 +24,35 @@
 ////////////////////////////////////////////////////////////////////////////////
 	
 /**
- * Manages the database operations about assets
+ * Manages the database operations about files
  *
  * @author Simone Vitale
  */
  
 use \Jacwright\RestServer\RestException;
 
-require_once "./FilesDatabaseHandler.php";
-
-class AssetsDatabaseHandler extends DatabaseHandler
+class FilesDatabaseHandler extends DatabaseHandler
 {
-	public function Assets($userId, $filters = null, $from = -1, $count = -1) {	
+	// TODO: rename to AssetFilesByAssetId
+	public function AssetFiles($assetId, $filters = null, $from = -1, $count = -1) {
 		global $authIssueText;
 		
-		$assets = array();
+		$files = array();
 		
 		$userAssetsFolder = Settings::getInstance()->p['userAssetsFolder'];
 		
-		$fields = "Asset.OwnerUserId, Asset.AssetId, Asset.Name, Asset.CreationDateTime, AssetType.Type AS 'Type', Asset.Version, Asset.AssetTypeId ";
+		$fields = "AssetFile.AssetId, File.FileId, File.OwnerUserId, File.IsPublic, File.OriginalFileName, File.FileName, FileType.FileTypeId, FileType.Name AS 'FileType', FileRole.Name as 'FileRole' ";
 		
-		$sql = "SELECT * FROM (";
 		$sql .= "SELECT $fields ";
-		$sql .= "FROM Asset, AssetType ";
-		$sql .= "WHERE Asset.AssetTypeId = AssetType.AssetTypeId ";
-		$sql .= "AND Asset.IsPublic = 1 ";
-		if($userId != null) {
-			$sql .= "UNION ";
-			$sql .= "SELECT $fields ";
-			$sql .= "FROM Asset, AssetType ";
-			$sql .= "WHERE Asset.AssetTypeId = AssetType.AssetTypeId ";
-			$sql .= "AND Asset.OwnerUserId = $userId ";
-			$sql .= "UNION ";
-			$sql .= "SELECT $fields ";
-			$sql .= "FROM Asset, AssetType, UserAsset ";
-			$sql .= "WHERE Asset.AssetId = UserAsset.AssetId ";
-			$sql .= "AND Asset.AssetTypeId = AssetType.AssetTypeId ";
-			$sql .= "AND UserAsset.UserId = $userId ";
-		}
-		$sql .= ") t ";
+		$sql .= "FROM AssetFile ";
+		$sql .= "LEFT JOIN FileRole ON AssetFile.FileRoleId = FileRole.FileRoleId ";
+		$sql .= "LEFT JOIN File ON AssetFile.FileId = File.FileId ";
+		$sql .= "LEFT JOIN FileType ON File.FileTypeId = FileType.FileTypeId ";
+		/*if($userId != null) {
+			... Implement Security ...
+		}*/
 		
-		$sql .= " WHERE t.AssetId > 0 ";
+		$sql .= " WHERE AssetId = $assetId ";
 		
 		// Apply Filters
 		if($filters != null) {
@@ -87,53 +75,53 @@ class AssetsDatabaseHandler extends DatabaseHandler
 		$recordsCount = mysqli_num_rows($result);
 
 		if($recordsCount >= 1 && $result != null) {
-			$filesHandler = new FilesDatabaseHandler;
-			
 			while($row = mysqli_fetch_array($result)) {
-				$assets[] = array (
+				$files[] = array (
 					'AssetId' => $row['AssetId'],
-					'Name' => $row['Name'],
-					'Type' => $row['Type'],
-					'CreationDateTime' => $row['CreationDateTime'],
-					'Version' => $row['Version'],
+					'FileId' => $row['FileId'],
 					'OwnerUserId' => $row['OwnerUserId'],
-					'Files' => $filesHandler->AssetFiles($row['AssetId'])
+					'IsPublic' => $row['IsPublic'],
+					'FileName' => $row['FileName'],
+					'OriginalFileName' => $row['OriginalFileName'],
+					'FileType' => $row['FileType'],
+					'FileRole' => $row['FileRole']
 				);
 			}
 		}
 		
-		return $assets;
+		return $files;
 	}
 	
-	public function AssetTypes() {
-		$assetTypes = array();
+	// TODO: test this method (never tested)
+	public function FileTypes() {
+		$fileTypes = array();
 		
-		$sql = "SELECT AssetTypeId, Type FROM AssetType ";
+		$sql = "SELECT FileTypeId, Name FROM FileType ";
 		
 		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		if($recordsCount >= 1 && $result != null) {
 			while($row = mysqli_fetch_array($result)) {
-				$assetTypes[] = array (
-					'AssetTypeId' => $row['AssetTypeId'],
-					'Type' => $row['Type']
+				$fileTypes[] = array (
+					'FileTypeId' => $row['FileTypeId'],
+					'Name' => $row['Name']
 				);
 			}
 		}
 		
-		return $assetTypes;
+		return $fileTypes;
 	}
 	
-	function AssetById($assetId) {
+	function FileById($fileId) {
 		$userAssetsFolder = Settings::getInstance()->p['userAssetsFolder'];
 
-		$assetFieldsSql = "Asset.AssetId, Asset.Name, Asset.CreationDateTime, Asset.Version, Asset.OwnerUserId, AssetType.Type AS Type ";
+		$fields = "File.FileId, File.OwnerUserId, File.IsPublic, File.OriginalFileName, File.FileName, FileType.FileTypeId, FileType.Name AS 'FileType' ";
 		
-		$sql  = "SELECT $assetFieldsSql ";
-		$sql .= "FROM Asset, AssetType ";
-		$sql .= "WHERE Asset.AssetTypeId = AssetType.AssetTypeId ";
-		$sql .= "AND Asset.AssetId = $assetId ";
+		$sql  = "SELECT $fields ";
+		$sql .= "FROM File ";
+		$sql .= "LEFT JOIN FileType ON File.FileTypeId = FileType.FileTypeId ";
+		$sql .= "WHERE File.FileId = $fileId ";
 		
 		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
@@ -145,57 +133,21 @@ class AssetsDatabaseHandler extends DatabaseHandler
 			
 			$row = mysqli_fetch_array($result);
 			
-			$data = array(	'AssetId' => $row['AssetId'],
-							'Name' => $row['Name'],
-							'Type' => $row['Type'],
-							'CreationDateTime' => $row['CreationDateTime'],
-							'Files' => $this->AssetFilesByAssetId($assetId),
-							'Version' => $row['Version'],
-							'OwnerUserId' => $row['OwnerUserId']);
-		}
-
-		return $data;
-	}
-	
-	//TODEL: duplicated
-	function AssetFilesByAssetId($assetId) {
-		$sql  = "SELECT File.FileId, FileType.Name AS FileType, FileRole.Name AS FileRole, File.OwnerUserId, File.OriginalFileName, File.FileName ";
-		$sql .= "FROM File, FileType, AssetFile, FileRole ";
-		$sql .= "WHERE File.FileTypeId = FileType.FileTypeId ";
-		$sql .= "AND File.FileId = AssetFile.FileId ";
-		$sql .= "AND FileRole.FileRoleId = AssetFile.FileRoleId ";
-		$sql .= "AND AssetFile.AssetId = $assetId";
-		
-		$result = $this->mysqli->query($sql);
-		$recordsCount = mysqli_num_rows($result);
-
-		$data = null;
-
-		if($recordsCount >= 1 && $result != null) {
-			$userAssetsFolder = Settings::getInstance()->p['userAssetsFolder'];
-			
-			$data = [];
-			
-			while($row = mysqli_fetch_array($result)) {
-			
 			$fileUrl = (strlen($row[FileName]) > 0) ? parent::GetFileUrl($row[OwnerUserId], $row[FileName], $userAssetsFolder, true) : "";
-			//$filePath = (strlen($row[FileName]) > 0) ? parent::GetFileUrl($row[UserId], $row[FileName], $userAssetsFolder, false) : "";
 			
-			$data[] = array('FileId' => $row['FileId'],
-							'FileType' => $row['FileType'],
-							'FileRole' => $row['FileRole'],
-							//'CreationDateTime' => $row['CreationDateTime'],
-							'OriginalFileName' => $row['OriginalFileName'],
+			$data = array(	'FileId' => $row['FileId'],
+							'OwnerUserId' => $row['OwnerUserId'],
+							'IsPublic' => $row['IsPublic'],
 							'FileName' => $row['FileName'],
-							//'FilePath' => $filePath,
+							'OriginalFileName' => $row['OriginalFileName'],
 							'FileUrl' => $fileUrl,
-							'OwnerUserId' => $row['OwnerUserId']);
-			}
+							'FileType' => $row['FileType']);
 		}
-		
+
 		return $data;
 	}
 	
+	/*
 	function CheckIfOwned($userId, $assetId, $throwException = true) {
 		global $mysqli;
 		
@@ -219,7 +171,7 @@ class AssetsDatabaseHandler extends DatabaseHandler
 		}
 		
 		return true; // Authorized
-	}
+	}*/
 }
 
 ?>
