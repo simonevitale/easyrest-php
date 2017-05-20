@@ -45,25 +45,16 @@ class EventsDatabaseHandler extends DatabaseHandler
 		$sql .= "LEFT JOIN Location ON Event.LocationId = Location.LocationId ";
 		$sql .= "WHERE EventId > 0 ";
 		if($userId > 0) $sql .= "AND Event.UserId = $userId ";
-
-		//$filters['AuthorId'] = 1;
 		
 		// Apply Filters
 		if($filters != null) {
-			// Language filter shows also records with no set language
 			foreach ($filters as $key => $value) {
-				if(strcmp($key, "Language") == 0)
-					$sql .= " AND (";
+				// -orblank postfix for language filter shows also records with no set language
+				$orBlankIndex = strpos($value, '-orblank');
+				if(strcmp($key, "Language") == 0 && $orBlankIndex !== false)
+					$sql .= " AND (Event.$key = '".substr($value, 2)."' OR Event.$key = '')";
 				else
-					$sql .= " AND ";
-				
-				if(strcmp(gettype($value), "string") == 0)
-					$sql .= " Event.$key = '$value' ";
-				else
-					$sql .= " Event.$key = $value ";
-				
-				if(strcmp($key, "Language") == 0)
-					$sql .= " OR Event.$key = '') ";
+					$sql .= " AND Event.$key = '$value' ";
 			}
 			foreach ($notFilters as $key => $value) {
 				$sql .= " AND Event.$key <> '$value' ";

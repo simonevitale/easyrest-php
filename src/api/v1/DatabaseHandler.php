@@ -104,6 +104,10 @@ class DatabaseHandler
 		return true; // Authorized
 	}
 
+	public function GetFileUrl($userId, $image, $folder, $absolutePath = true, $pathOnly = false) {
+		return $this->GetImageUrl($userId, $image, $folder, false, $absolutePath, $pathOnly);
+	}
+	
 	public function GetImageUrl($userId, $image, $folder, $thumbnail = false, $absolutePath = true, $pathOnly = false) {
 		$websiteUrl = Settings::getInstance()->p['websiteUrl'];
 		$portalFolder = Settings::getInstance()->p['portalFolder'];

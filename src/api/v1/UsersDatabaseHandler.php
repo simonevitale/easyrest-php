@@ -30,12 +30,12 @@
  */
 
 class Role {
-	public $IdRole	  = 0;
+	public $RoleId	  = 0;
 	public $Name  	  = "";
 	public $Modules	  = null;
 	
 	public function __construct($id, $name, $modules) {
-        $this->IdRole  = $id;
+        $this->RoleId  = intval($id);
         $this->Name    = $name;
 		$this->Modules = explode(",", $modules);
     }

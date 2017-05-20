@@ -17,6 +17,7 @@
 	<userArticlesFolder>articles</userArticlesFolder>
 	<userEventsFolder>events</userEventsFolder>
 	<userAuthorsFolder>authors</userAuthorsFolder>
+	<userAssetsFolder>assets</userAssetsFolder>
 	
 	<thumbnailPrefix>thumbnail.</thumbnailPrefix>
 	

@@ -39,5 +39,10 @@
 		<component role="DatabaseHandler">EventsDatabaseHandler.php</component>
 		<component role="Controller" name="EventsController">EventsController.php</component>
 	</module>
+
+	<module name="Assets">
+		<component role="DatabaseHandler">AssetsDatabaseHandler.php</component>
+		<component role="Controller" name="AssetsDatabaseHandler">AssetsController.php</component>
+	</module>
 	
 </modules>
