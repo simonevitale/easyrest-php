@@ -23,32 +23,49 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-require_once("DatabaseBase.php");
+libxml_use_internal_errors(true);
 
 /*
-* Mysql database class - connects to the main database
-* Implements singleton and only one connection is allowed
+* Mysql database base class - only one connection allowed
 */
-class Database extends DatabaseBase {
-	private static $_instance; // The single instance
+class DatabaseBase {
+	private $_connection;
 	
-	/*
-	Get an instance of the Database
-	@return Instance
-	*/
-	public static function getInstance() {
-		if(!self::$_instance) { // If no instance then make one
-			self::$_instance = new self();
+	private $_host 	   = "";
+	private $_username = "";
+	private $_password = "";
+	private $_database = "";
+	
+	function openConnection($settingsFile)
+	{
+		$xml = simplexml_load_file($settingsFile) or die("Error: Cannot create object");
+		
+		if ($xml === false) {
+			echo "Failed loading XML: ";
+			foreach(libxml_get_errors() as $error) {
+				echo "<br>", $error->message;
+			}
+		} else {
+			$this->_host 	 = $xml->hostname;
+			$this->_username = $xml->username;
+			$this->_password = $xml->password;
+			$this->_database = $xml->database;
+
+			$this->_connection = mysqli_connect($this->_host, $this->_username, $this->_password, $this->_database);
+		
+			// Error handling
+			if(mysqli_connect_errno()) {
+				trigger_error("Failed to connect to MySQL: " . mysql_connect_error(),
+					 E_USER_ERROR);
+			}
+			
+			// Change character set to utf8
+			mysqli_set_charset($this->_connection, "utf8");
 		}
-		return self::$_instance;
 	}
 	
-	// Constructor
-	private function __construct() {
-		$this->openConnection("settings/Database.xml");
+	// Get mysqli connection
+	public function getConnection() {
+		return $this->_connection;
 	}
-	
-	// Magic method clone is empty to prevent duplication of connection
-	private function __clone() { }
 }
-?>

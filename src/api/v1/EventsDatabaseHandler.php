@@ -71,8 +71,10 @@ class EventsDatabaseHandler extends DatabaseHandler
 		}
 		
 		// Showing upcoming events
+		$tolleranceHours = 12;
+		$d = date('Y-m-d H:m:s',strtotime('-'.$tolleranceHours.' hours'));
 		if($upcoming == 1)
-			$sql .= " AND Event.DateTime <> '' AND Event.DateTime >= '".date('Y-m-d')."' ";
+			$sql .= " AND Event.DateTime <> '' AND Event.DateTime >= '".$d."' ";
 			
 		// Showing past events
 		if($upcoming == -1)
