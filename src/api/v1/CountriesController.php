@@ -38,6 +38,16 @@ class CountriesController extends DatabaseHandler
     {
 		return parent::Countries();
 	}
+	
+    /**
+     * Get Countries with full details
+     * 
+     * @url GET /countries/full
+     */
+    public function getCountriesFull()
+    {
+		return parent::Countries(false);
+	}
 }
 
 ?>

@@ -39,7 +39,7 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 		if($User == null)
 			throw new RestException(401, "Unauthorized");
 
-		$sql = "SELECT AuthorId, Name, UniqueName, Image FROM Author WHERE UserId = $userId AND Active = true ORDER BY Name";
+		$sql = "SELECT AuthorId, Name, UniqueName, Image, Email, Website, AllowContact FROM Author WHERE UserId = $userId AND Active = true ORDER BY Name";
 
 		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
@@ -56,7 +56,10 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 					'UniqueName' => $row['UniqueName'],
 					'Name' => $row['Name'],
 					'Image' => $imageUrl,
-					'Thumbnail' => $imageThumbnailUrl
+					'Thumbnail' => $imageThumbnailUrl,
+					'Email' => $row['Email'],
+					'Website' => $row['Website'],
+					'AllowContact' => $row['AllowContact']
 				);
 			}
 		}
@@ -67,7 +70,7 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 	private function AuthorBy($condition) {
 		$userAuthorsFolder = Settings::getInstance()->p['userAuthorsFolder'];
 
-		$sql = "SELECT AuthorId, Name, UniqueName, Image, UserId FROM Author $condition";
+		$sql = "SELECT AuthorId, Name, UniqueName, Image, UserId, Email, Website, AllowContact FROM Author $condition";
 
 		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
@@ -86,7 +89,10 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 							'Image' => $row['Image'],
 							'ImageUrl' => $authorPictureUrl,
 							'ThumbnailUrl' => $authorThumbnailUrl,
-							'UserId' => intval($row['UserId']));
+							'UserId' => intval($row['UserId']),
+							'Email' => $row['Email'],
+							'Website' => $row['Website'],
+							'AllowContact' => $row['AllowContact']);
 		}
 
 		return $data;
@@ -148,6 +154,9 @@ class AuthorsDatabaseHandler extends DatabaseHandler
 		$sql .= "  Name = \"".$this->mysqli->real_escape_string($author['Name'])."\"";
 		$sql .= ", UniqueName = \"".$this->mysqli->real_escape_string($author['UniqueName'])."\"";
 		$sql .= ", Image = \"".$author['Image']."\"";
+		$sql .= ", Email = \"".$author['Email']."\"";
+		$sql .= ", Website = \"".$author['Website']."\"";
+		$sql .= ", AllowContact = ".$author['AllowContact'];
 		$sql .= " WHERE AuthorId = ".$author['AuthorId'];
 		
 		return $this->mysqli->query($sql) or die ($authIssueText);

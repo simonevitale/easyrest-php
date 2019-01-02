@@ -43,6 +43,7 @@ The following modules have been so far implemented:
 * Location
 * Article
 * Event
+* Asset
 * User - Manages users, including "sign in" / "sign out" / "sign up" operations.
 
 ### Development

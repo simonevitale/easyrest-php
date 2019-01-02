@@ -35,7 +35,7 @@ class LogsController extends DatabaseHandler
      * @url GET /logs
      */
     public function getPrivateLogs() {
-		$authIdUser = parent::CheckAuthentication(true, true);
+		$authIdUser = parent::CheckAuthentication(true, true); // Check if admin
 		
 		$logs = null;
 		
@@ -44,7 +44,7 @@ class LogsController extends DatabaseHandler
 		if(isset($_GET['from']))  $from = $_GET['from']; else $from = 0;
 		if(isset($_GET['count'])) $count = $_GET['count']; else $count = 50;
 		
-		$sql = "SELECT Action, Agent, UserEmail, DateTime, Ip, Location FROM Log ";
+		$sql = "SELECT Action, Agent, AgentVersion, UserEmail, DateTime, Ip, Location FROM Log ";
 		$sql .= " WHERE LogId > 0 ";
 		
 		// Filter by action
@@ -65,6 +65,7 @@ class LogsController extends DatabaseHandler
 				$logs[] = array(
 					Action => $row['Action'], 
 					Agent => $row['Agent'], 
+					AgentVersion => $row['AgentVersion'], 
 					Email  => $row['UserEmail'],
 					DateTime => gmdate("D, d M Y H:i:s", $row['DateTime']),
 					Ip => $row['Ip'],

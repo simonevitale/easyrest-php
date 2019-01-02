@@ -76,12 +76,16 @@ class FilesDatabaseHandler extends DatabaseHandler
 
 		if($recordsCount >= 1 && $result != null) {
 			while($row = mysqli_fetch_array($result)) {
+				
+				$fileUrl = (strlen($row[OriginalFileName]) > 0) ? parent::GetFileUrl($row[OwnerUserId], $row[OriginalFileName], $userAssetsFolder, true) : "";
+			
 				$files[] = array (
 					'AssetId' => $row['AssetId'],
 					'FileId' => $row['FileId'],
 					'OwnerUserId' => $row['OwnerUserId'],
 					'IsPublic' => $row['IsPublic'],
 					'FileName' => $row['FileName'],
+					'FileUrl' => $fileUrl, // Possibly not used anymore
 					'OriginalFileName' => $row['OriginalFileName'],
 					'FileType' => $row['FileType'],
 					'FileRole' => $row['FileRole']

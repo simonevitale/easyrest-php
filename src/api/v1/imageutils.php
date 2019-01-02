@@ -1,36 +1,43 @@
 <?
 // This function will proportionally resize image 
-function resizeImage($CurWidth, $CurHeight, $MaxSize, $DestFolder, $SrcImage, $Quality, $ImageType)
-{
+function resizeImage($CurWidth, $CurHeight, $MaxSize, $DestFolder, $SrcImage, $Quality, $ImageType) {
 	//Check Image size is not 0
 	if($CurWidth <= 0 || $CurHeight <= 0) {
 		return false;
 	}
 	
 	//Construct a proportional size of new image
-	$ImageScale      	= min($MaxSize/$CurWidth, $MaxSize/$CurHeight); 
-	$NewWidth  			= ceil($ImageScale*$CurWidth);
-	$NewHeight 			= ceil($ImageScale*$CurHeight);
-	$NewCanves 			= imagecreatetruecolor($NewWidth, $NewHeight);
+	$ImageScale = min($MaxSize/$CurWidth, $MaxSize/$CurHeight); 
+	$NewWidth   = ceil($ImageScale*$CurWidth);
+	$NewHeight  = ceil($ImageScale*$CurHeight);
+	$NewCanvas  = imagecreatetruecolor($NewWidth, $NewHeight);
+	
+	if(strtolower($ImageType) == 'image/png') {
+		// Saves Alpha
+		imagealphablending($NewCanvas, false);
+		imagesavealpha($NewCanvas,true);
+		$transparent = imagecolorallocatealpha($NewCanvas, 255, 255, 255, 127);
+		imagefilledrectangle($NewCanvas, 0, 0, $NewWidth, $NewHeight, $transparent);
+	}
 	
 	// Resize Image
-	if(imagecopyresampled($NewCanves, $SrcImage,0, 0, 0, 0, $NewWidth, $NewHeight, $CurWidth, $CurHeight)) {
+	if(imagecopyresampled($NewCanvas, $SrcImage, 0, 0, 0, 0, $NewWidth, $NewHeight, $CurWidth, $CurHeight)) {
 		switch(strtolower($ImageType)) {
 			case 'image/png':
-				imagepng($NewCanves,$DestFolder);
+				imagepng($NewCanvas, $DestFolder);
 				break;
 			case 'image/gif':
-				imagegif($NewCanves,$DestFolder);
+				imagegif($NewCanvas, $DestFolder);
 				break;			
 			case 'image/jpeg':
 			case 'image/pjpeg':
-				imagejpeg($NewCanves,$DestFolder,$Quality);
+				imagejpeg($NewCanvas, $DestFolder, $Quality);
 				break;
 			default:
 				return false;
 		}
 		//Destroy image, frees memory	
-		if(is_resource($NewCanves)) {imagedestroy($NewCanves);} 
+		if(is_resource($NewCanvas)) { imagedestroy($NewCanvas);} 
 		return true;
 	}
 }
@@ -55,26 +62,36 @@ function cropImage($CurWidth, $CurHeight, $iSize, $DestFolder, $SrcImage, $Quali
 		$square_size = $CurHeight - ($y_offset * 2);
 	}
 	
-	$NewCanves 	= imagecreatetruecolor($iSize, $iSize);	
-	if(imagecopyresampled($NewCanves, $SrcImage,0, 0, $x_offset, $y_offset, $iSize, $iSize, $square_size, $square_size))
+	$NewCanvas 	= imagecreatetruecolor($iSize, $iSize);	
+	
+	if(strtolower($ImageType) == 'image/png') {
+		// Saves Alpha
+		imagealphablending($NewCanvas, false);
+		imagesavealpha($NewCanvas,true);
+		$transparent = imagecolorallocatealpha($NewCanvas, 255, 255, 255, 127);
+		imagefilledrectangle($NewCanvas, 0, 0, $square_size, $square_size, $transparent);
+	}
+	
+	if(imagecopyresampled($NewCanvas, $SrcImage, 0, 0, $x_offset, $y_offset, $iSize, $iSize, $square_size, $square_size))
 	{
 		switch(strtolower($ImageType))
 		{
 			case 'image/png':
-				imagepng($NewCanves,$DestFolder);
+				imagepng($NewCanvas,$DestFolder);
 				break;
 			case 'image/gif':
-				imagegif($NewCanves,$DestFolder);
+				imagegif($NewCanvas,$DestFolder);
 				break;			
 			case 'image/jpeg':
 			case 'image/pjpeg':
-				imagejpeg($NewCanves,$DestFolder,$Quality);
+				imagejpeg($NewCanvas,$DestFolder,$Quality);
 				break;
 			default:
 				return false;
 		}
+		
 		//Destroy image, frees memory	
-		if(is_resource($NewCanves)) {imagedestroy($NewCanves);} 
+		if(is_resource($NewCanvas)) {imagedestroy($NewCanvas);} 
 		return true;
 	} 
 }

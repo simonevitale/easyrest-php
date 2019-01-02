@@ -98,6 +98,12 @@ class AuthorsController extends AuthorsDatabaseHandler
 		
 		$author['Name'] = $_POST['Name'];
 		$author['Image'] = $image;
+		$author['Email'] = $_POST['Email'];
+		$author['Website'] = $_POST['Website'];
+		
+		$allowContact = 0;
+		if(strcmp($_POST['AllowContact'], "true") == 0 || $_POST['AllowContact'] == 1 || $_POST['AllowContact'] == true) $allowContact = 1;
+		$author['AllowContact'] = $allowContact;
 			
 		parent::DbUpdateAuthor($author);
 		
@@ -115,7 +121,7 @@ class AuthorsController extends AuthorsDatabaseHandler
 		
 		if(parent::CheckIfOwned($userId, "Author", $authorId) == true) {
 			$authorInEventsCount = parent::GetRecordsCount('Event', $userId, 'AuthorId = '.$authorId);
-			$authorInArticlesCount = parent::GetRecordsCount('Article', $userId, 'AuthorId = '.authorId);
+			$authorInArticlesCount = parent::GetRecordsCount('Article', $userId, 'AuthorId = '.$authorId);
 			
 			if(($authorInEventsCount + $authorInArticlesCount) > 0) {
 				parent::DeActivateRecord('Author', $authorId);

@@ -58,6 +58,8 @@ class LocationsController extends LocationsDatabaseHandler
     public function updateLocation() {
 		$userId = parent::CheckAuthentication();
 		
+		$userLocationsFolder = Settings::getInstance()->p['userLocationsFolder'];
+		
 		global $authIssueText;
 		
 		if(isset($_POST['LocationId']) && is_numeric($_POST['LocationId'])) {
@@ -69,8 +71,27 @@ class LocationsController extends LocationsDatabaseHandler
 		
 		parent::CheckIfOwned($userId, "Location", $locationId, true);
 		
+		$location = parent::LocationById($locationId);
+		
+		// Remove older image
+		$isImageUploading = (isset($_FILES['NewImage']) && is_uploaded_file($_FILES['NewImage']['tmp_name'])) ? 1 : 0;
+		
+		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userLocationsFolder, false, false, true)."/";
+
+		if(strlen($_POST['Image']) == 0 || $isImageUploading) {
+			$this->UnlinkRemovedLocationImages($userId, $location['Image']);
+		}
+		
+		// Upload new image
+		if($isImageUploading == 1) {
+			$image = uploadImage($_FILES['NewImage'], $destinationDirectory, 350);
+		}
+		
+		if(isset($_POST['Image']) && $isImageUploading != 1) $image = $_POST['Image'];
+		
 		$sql  = "UPDATE Location SET";
 		$sql .= "  Name = \"".$this->mysqli->real_escape_string($_POST['Name'])."\"";
+		$sql .= ", Image = \"".$this->mysqli->real_escape_string($image)."\"";
 		$sql .= ", Address1 = \"".$this->mysqli->real_escape_string($_POST['Address1'])."\"";
 		$sql .= ", Address2 = \"".$this->mysqli->real_escape_string($_POST['Address2'])."\"";
 		$sql .= ", PostCode = \"".$_POST['PostCode']."\"";
@@ -99,15 +120,31 @@ class LocationsController extends LocationsDatabaseHandler
 		$locationId = $_POST['LocationId'];
 		
 		if(parent::CheckIfOwned($userId, "Location", $locationId) == true) {
-			$locationInEventsCount = parent::GetRecordsCount('Event', $userId, 'LocationId = '.$locationId);
+			$locationInEventsCount = parent::GetRecordsCount('Location', $userId, 'LocationId = '.$locationId);
 			
 			if($locationInEventsCount > 0) {
 				parent::DeActivateRecord('Location', $locationId);
 			} else {
+				$location = parent::LocationById($locationId);
+				$this->UnlinkRemovedLocationImages($userId, $location['Image']);
 				parent::DeleteRecord('Location', $userId, $locationId);
 			}
 			
 			return "OK";
+		}
+	}
+
+	private function UnlinkRemovedLocationImages($userId, $image) {
+		$userLocationsFolder = Settings::getInstance()->p['userLocationsFolder'];
+		
+		$imageFileToRemove = "../../".parent::GetImageUrl($userId, $image, $userLocationsFolder, false, false);
+		$imageThumbnailFileToRemove = "../../".parent::GetImageUrl($userId, $image, $userLocationsFolder, true, false);
+		
+		if(strlen($image) > 0) {
+			if(file_exists($imageFileToRemove))
+				unlink($imageFileToRemove);
+			if(file_exists($imageThumbnailFileToRemove))
+				unlink($imageThumbnailFileToRemove);
 		}
 	}
 }

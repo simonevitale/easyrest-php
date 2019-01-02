@@ -23,6 +23,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+// Watch out to not insert blank spaces in the HTML code (e.g. " <? ... ? >"
+
 // The debug flag is only to check if the modules are loading correctly
 // Enabling the debug the REST server WON'T work.
 //$debug = true;
@@ -37,7 +39,7 @@ require_once "DatabaseHandler.php";
 
 require __DIR__ . '/Jacwright/RestServer/RestServer.php';
 
-$server = new \Jacwright\RestServer\RestServer('debug');
+$server = new \Jacwright\RestServer\RestServer('production');
 
 // Load Modules
 
@@ -70,6 +72,9 @@ function loadXMLModules($xmlFile) {
 		}
 	}
 	
+	if($debug) echo "<br />";
+	
+	//print_r( $server);
 	$server->handle();
 }
 

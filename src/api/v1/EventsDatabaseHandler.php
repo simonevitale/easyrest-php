@@ -26,20 +26,27 @@
 require_once("./AuthorsDatabaseHandler.php");
 require_once("./UsersDatabaseHandler.php");
 require_once("./LocationsDatabaseHandler.php");
+
+require_once("./libs/Hashids/HashGenerator.php");
+require_once("./libs/Hashids/Hashids.php");
 	
 /**
  * Manages the database operations about events
  *
  * @author Simone Vitale
  */
-class EventsDatabaseHandler extends DatabaseHandler
-{
+class EventsDatabaseHandler extends DatabaseHandler {
 	function Events($filters = null, $notFilters = null, $from = -1, $count = -1, $userId = -1, $orderBy = "", $upcoming = 1, $year = null) {
 		$userEventsFolder = Settings::getInstance()->p['userEventsFolder'];
 
 		$events = array();
 		
-		$sql  = "SELECT Event.EventId, Event.UserId, Event.Title, Event.DateTime, Event.Description, Event.Image, Event.Language, Event.Published, Event.FacebookLink, Event.YouTubeLink, Event.FlickrLink, Author.Name AS 'Author', Location.Name AS 'Location' ";
+		$serverTimeZone = "+00:00";
+		
+		$sql  = "SET time_zone='$serverTimeZone'; ";
+		$this->mysqli->query($sql);
+		
+		$sql  = "SELECT Event.EventId, Event.UserId, Event.Title, Event.DateTime, Event.TimeZone, Event.Description, Event.Image, Event.Language, Event.Published, Event.FacebookLink, Event.YouTubeLink, Event.FlickrLink, Author.Name AS 'Author', Location.Name AS 'Location' ";
 		$sql .= "FROM Event ";
 		$sql .= "LEFT JOIN Author ON Event.AuthorId = Author.AuthorId ";
 		$sql .= "LEFT JOIN Location ON Event.LocationId = Location.LocationId ";
@@ -61,11 +68,13 @@ class EventsDatabaseHandler extends DatabaseHandler
 			}
 		}
 		
+		date_default_timezone_set('Europe/London');
+		
 		// Showing upcoming events
-		$tolleranceHours = 12;
-		$d = date('Y-m-d H:m:s',strtotime('-'.$tolleranceHours.' hours'));
+		//SELECT date(Event.DateTime), date(CONVERT_TZ('2018-02-23 22:00', '+00:00', '+03:00')) FROM Event
 		if($upcoming == 1)
-			$sql .= " AND Event.DateTime <> '' AND Event.DateTime >= '".$d."' ";
+			$sql .= " AND Event.DateTime <> '' AND date(Event.DateTime) >= date(CONVERT_TZ('".date('Y-m-d H:i', strtotime('-6 hours'))."', '$serverTimeZone', Event.TimeZone))";
+			//$sql .= " AND Event.DateTime <> '' AND Event.DateTime >= '".date('Y-m-d')."' ";
 			
 		// Showing past events
 		if($upcoming == -1)
@@ -82,7 +91,6 @@ class EventsDatabaseHandler extends DatabaseHandler
 		if($from != -1 && $count != -1)
 			$sql .= " LIMIT $from, $count \n";
 		
-		//echo $sql;
 		$result = $this->mysqli->query($sql);
 		
 		$recordsCount = mysqli_num_rows($result);
@@ -102,9 +110,11 @@ class EventsDatabaseHandler extends DatabaseHandler
 					'Author' => $row['Author'],
 					'Location' => $row['Location'],
 					'DateTime' => $row['DateTime'],
+					'TimeZone' => $row['TimeZone'],
 					'ShortDescription' => $ShortDescription,
-					'Image' 	=> $imageUrl,
-					'Thumbnail' => $imageThumbnailUrl,
+					'Image' 	=> $row[Image],
+					'ImageUrl' 	=> $imageUrl,
+					'ThumbnailUrl' => $imageThumbnailUrl,
 					'FacebookLink' => $row['FacebookLink'],
 					'YouTubeLink' => $row['YouTubeLink'],
 					'FlickrLink' => $row['FlickrLink'],
@@ -121,7 +131,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 	function EventById($EventId) {
 		$userEventsFolder = Settings::getInstance()->p['userEventsFolder'];
 
-		$EventFieldsSql = " Event.UserId, Event.EventId, Event.Title, Event.Image, Event.Description AS Description, Event.CreationDateTime, Event.DateTime, Event.FacebookLink, Event.YouTubeLink, Event.FlickrLink, Event.Language, Event.Published, Event.Statistics ";
+		$EventFieldsSql = " Event.UserId, Event.EventId, Event.Title, Event.Image, Event.Description AS Description, Event.CreationDateTime, Event.DateTime, Event.TimeZone, Event.FacebookLink, Event.YouTubeLink, Event.FlickrLink, Event.Language, Event.Published "; //, Event.Statistics
 		
 		$sql = "SELECT $EventFieldsSql, AuthorId, LocationId FROM Event WHERE Event.EventId = $EventId";
 		
@@ -141,8 +151,12 @@ class EventsDatabaseHandler extends DatabaseHandler
 			
 			$AuthorsDbHandler = new AuthorsDatabaseHandler;
 			$LocationsDbHandler = new LocationsDatabaseHandler;
+			$UsersDbHandler = new UsersDatabaseHandler;
 			
-			$data = array(	'EventId' => $row['EventId'],
+			$hashids = new Hashids\Hashids('SquizMaster', 4, "abcdefghijklmnopqrstuvwxyz1234567890");
+			
+			$data = array(	'EventId' => intval($row['EventId']),
+							'EventCode' => $hashids->encode($row['EventId']),
 							'Title' => $row['Title'],
 							'Image' => $row['Image'],
 							'ImageUrl' => $imageUrl,
@@ -150,20 +164,22 @@ class EventsDatabaseHandler extends DatabaseHandler
 							'Description' => $Description,
 							'CreationDateTime' => $row['CreationDateTime'],
 							'DateTime' => $row['DateTime'],
+							'TimeZone' => parseTimeZoneStringToHours($row['TimeZone']),
 							'FacebookLink' => $row['FacebookLink'],
 							'YouTubeLink' => $row['YouTubeLink'],
 							'FlickrLink' => $row['FlickrLink'],
 							'Language' => $row['Language'],
 							'Published' => $row['Published'],
 							'ShortDescription' => $ShortDescription,
-							'LocationId' => $row['LocationId'],
-							'Location' => $LocationsDbHandler->LocationById($row['LocationId']),
-							'AuthorId' => $row['AuthorId'],
-							'Author' => $AuthorsDbHandler->AuthorById($row['AuthorId']),
-							'UserId' => $row['UserId'],
-							'Statistics' => $row['Statistics']);
+							'LocationId' => intval($row['LocationId']),
+							'Location' => $row['LocationId'] > 0 ? $LocationsDbHandler->LocationById($row['LocationId']) : null,
+							'AuthorId' => intval($row['AuthorId']),
+							'Author' => $row['AuthorId'] > 0 ? $AuthorsDbHandler->AuthorById($row['AuthorId']) : null,
+							'UserId' => intval($row['UserId']),
+							'User' => $row['UserId'] > 0 ? $UsersDbHandler->UserById($row['UserId']) : null
+							);
 		}
-
+		$result->free();
 		return $data;
 	}
 	
@@ -174,7 +190,7 @@ class EventsDatabaseHandler extends DatabaseHandler
 		
 		$User = $UsersHandler->UserById($UserId);
 		
-		$Language = $User['Language'];
+		$Language = (intval($User['Country']) == 105) ? "it" : $User['Language'];
 
 		$sql = "INSERT INTO Event (Title, UserId, CreationDateTime, Language) ";
 		$sql .= "VALUES('$Title', $UserId, '".time()."', '$Language')";
@@ -194,10 +210,11 @@ class EventsDatabaseHandler extends DatabaseHandler
 		$sql .= ", Image = \"".$event['Image']."\"";
 		$sql .= ", Description = \"".$this->mysqli->real_escape_string($event['Description'])."\"";
 		$sql .= ", DateTime = \"".$event['DateTime']."\"";
+		$sql .= ", TimeZone = \"".parseTimeZoneHoursToString($event['TimeZone'])."\"";
 		$sql .= ", FacebookLink = \"".$event['FacebookLink']."\"";
 		$sql .= ", YouTubeLink = \"".$event['YouTubeLink']."\"";
 		$sql .= ", FlickrLink = \"".$event['FlickrLink']."\"";
-		$sql .= ", Statistics = \"".$this->mysqli->real_escape_string($event['Statistics'])."\"";
+		//$sql .= ", Statistics = \"".$this->mysqli->real_escape_string($event['Statistics'])."\"";
 		$sql .= ", Language = \"".$event['Language']."\"";
 		$sql .= ", Published = ".$event['Published'];
 		$sql .= " WHERE EventId = ".$event['EventId'];

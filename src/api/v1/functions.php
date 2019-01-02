@@ -25,6 +25,8 @@
 
 include ("imageutils.php");
 
+// Returns: -1 => couldn't save the file
+// 			file name => the just uploaded final file name
 function uploadImage($ImageFile, $DestinationDirectory, $ThumbnailSize = 100, $ImageSize = 1024) {	
 	// Image and Thumbnail Settings
 	$ThumbSquareSize 		= $ThumbnailSize; // Thumbnail will be 100x100
@@ -37,11 +39,11 @@ function uploadImage($ImageFile, $DestinationDirectory, $ThumbnailSize = 100, $I
 		mkdir($DestinationDirectory, 0777, true);
 	}
 
-	$ImageName 		= str_replace(' ', '-', strtolower($ImageFile['name'])); //get image name
-	$ImageSize 		= $ImageFile['size']; // get original image size
-	$TempSrc	 	= $ImageFile['tmp_name']; // Temp name of image file stored in PHP tmp folder
-	$ImageType	 	= $ImageFile['type']; // get file type, returns "image/png", image/jpeg, text/plain etc.
-
+	$ImageName = str_replace(' ', '-', strtolower($ImageFile['name'])); //get image name
+	$ImageSize = $ImageFile['size']; // get original image size
+	$TempSrc   = $ImageFile['tmp_name']; // Temp name of image file stored in PHP tmp folder
+	$ImageType = $ImageFile['type']; // get file type, returns "image/png", image/jpeg, text/plain etc.
+	
 	// Get file extension from Image name, this will be added after random name
 	$ImageExt = substr($ImageName, strrpos($ImageName, '.'));
 	$ImageExt = str_replace('.','',$ImageExt);
@@ -64,8 +66,7 @@ function uploadImage($ImageFile, $DestinationDirectory, $ThumbnailSize = 100, $I
 	$DestRandImageName 			= $DestinationDirectory.$NewImageName; // Image with destination directory
 	
 	// Let's check allowed $ImageType, we use PHP SWITCH statement here
-	switch(strtolower($ImageType))
-	{
+	switch(strtolower($ImageType)) {
 		case 'image/png':
 			// Create a new image from file 
 			$CreatedImage = imagecreatefrompng($ImageFile['tmp_name']);
@@ -87,23 +88,29 @@ function uploadImage($ImageFile, $DestinationDirectory, $ThumbnailSize = 100, $I
 	list($CurWidth, $CurHeight) = getimagesize($TempSrc);
 	
 	// Resize image to Specified Size by calling resizeImage function.
-	if(resizeImage($CurWidth, $CurHeight, $BigImageMaxSize, $DestRandImageName, $CreatedImage, $Quality, $ImageType))
-	{
-		//Create a square Thumbnail right after, this time we are using cropImage() function
-		if(!cropImage($CurWidth,$CurHeight,$ThumbSquareSize,$thumb_DestRandImageName,$CreatedImage,$Quality,$ImageType))
-			{
-				echo 'Error Creating thumbnail';
-			}
-		/*
-		We have succesfully resized and created thumbnail image
-		We can now output image to user's browser or store information in the database
-		*/
-		
-		return $NewImageName;
-	} else {
-		//die('Resize Error'); // output error
-		return "";
+	//if($CurWidth > $BigImageMaxSize || $CurHeight > $BigImageMaxSize) {
+
+	//} else {
+		//if (!move_uploaded_file($ImageFile["tmp_name"], $DestRandImageName)) {
+		//	return -1;
+		//}
+	//}
+	
+	// Lower max image size if the image is not big enough
+	if($CurWidth < $BigImageMaxSize && $CurHeight < $BigImageMaxSize)
+		$BigImageMaxSize = max($CurWidth, $CurHeight);
+	
+	if(resizeImage($CurWidth, $CurHeight, $BigImageMaxSize, $DestRandImageName, $CreatedImage, $Quality, $ImageType)) {
+		// resized
 	}
+	
+	// Create a square Thumbnail by cropImage() function
+	if(!cropImage($CurWidth,$CurHeight,$ThumbSquareSize,$thumb_DestRandImageName,$CreatedImage,$Quality,$ImageType))
+	{
+		echo 'Error Creating thumbnail';
+	}
+	
+	return $NewImageName;
 }
 
 function generateRandomString($length = 10) {
@@ -179,5 +186,14 @@ function ip_info($ip = NULL, $purpose = "location", $deep_detect = TRUE) {
 		}
 	}
 	return $output;
+}
+
+function removeDirectory($path) {
+ 	$files = glob($path . '/*');
+	foreach ($files as $file) {
+		is_dir($file) ? removeDirectory($file) : unlink($file);
+	}
+	rmdir($path);
+ 	return;
 }
 ?>

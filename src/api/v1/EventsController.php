@@ -26,11 +26,31 @@
 use \Jacwright\RestServer\RestException;
 include "libs/phpqrcode/qrlib.php"; 
 
+require_once("./timezones.php");
+
 require_once("./EventsDatabaseHandler.php");
 require_once("./AuthorsDatabaseHandler.php");
-
+	
 class EventsController extends EventsDatabaseHandler
 {
+    /**
+     * Get World Timezones
+     * 
+     * @url GET /events/timezones
+     * @url GET /events/timezones/$code
+     */
+    public function getTimeZones($code = "") {
+		if($code != "") {
+			$code = strtoupper($code);
+			$timezone_identifiers = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $code);
+			$tzo = getTimeOffsetsByIdentifiers($timezone_identifiers);
+			
+			return $tzo;
+		}
+		
+		return getTimeOffsetsList();
+	}
+	
     /**
      * Get all the Events
 	 * If authentication is not provided, it shows only published events
@@ -63,10 +83,10 @@ class EventsController extends EventsDatabaseHandler
 			$filters[Published] = 1;
 		}
 		
-		if(isset($_GET['upcoming']))   $upcoming = $_GET['upcoming']; else $upcoming = 1;
-		if(isset($_GET['from']))  $from = $_GET['from']; else $from = -1;
-		if(isset($_GET['count'])) $count = $_GET['count']; else $count = -1;
-		if(isset($_GET['year']))  $year = $_GET['year']; else $year = null;
+		if(isset($_GET['upcoming']))$upcoming = $_GET['upcoming']; else $upcoming = 1;
+		if(isset($_GET['from']))  	$from = $_GET['from']; else $from = -1;
+		if(isset($_GET['count'])) 	$count = $_GET['count']; else $count = -1;
+		if(isset($_GET['year']))  	$year = $_GET['year']; else $year = null;
 		if(isset($_GET['orderby'])) $orderby = $_GET['orderby']; else $orderby = "";
 		
 		return parent::Events($filters, $notFilters, $from, $count, $userId, $orderby, $upcoming, $year);
@@ -78,12 +98,16 @@ class EventsController extends EventsDatabaseHandler
      * @url GET /event/$eventId
      */
     public function getEvent($eventId) {
-		$event = parent::EventById($eventId);
+		$hashids = new Hashids\Hashids('SquizMaster', 4, "abcdefghijklmnopqrstuvwxyz1234567890");
+		
+		$dbId = (is_numeric ($eventId)) ? $eventId : $hashids->decode($eventId);
+		
+		$event = parent::EventById($dbId);
 		
 		// Requires auth and ownership to show non published articles
 		if($event['Published'] == 0) {
 			$userId = parent::CheckAuthentication(true);
-			parent::CheckIfOwned($userId, "Event", $eventId, true);
+			parent::CheckIfOwned($userId, "Event", $dbId, true);
 		}
 		return $event;
 	}
@@ -150,6 +174,8 @@ class EventsController extends EventsDatabaseHandler
 		parent::CheckIfOwned($userId, "Event", $eventId, true);
 		
 		$event = parent::EventById($eventId);
+		
+		// Remove older image
 		$isImageUploading = (isset($_FILES['NewImage']) && is_uploaded_file($_FILES['NewImage']['tmp_name'])) ? 1 : 0;
 		
 		$destinationDirectory = "../../".parent::GetImageUrl($userId, "", $userEventsFolder, false, false, true)."/";
@@ -171,6 +197,7 @@ class EventsController extends EventsDatabaseHandler
 		if(isset($_POST['Language'])) $event["Language"] = $_POST['Language'];
 		if(isset($_POST['Description'])) $event["Description"] = $_POST['Description'];
 		if(isset($_POST['DateTime'])) $event["DateTime"] = $_POST['DateTime'];
+		if(isset($_POST['TimeZone'])) $event["TimeZone"] = $_POST['TimeZone'];
 		if(isset($_POST['FacebookLink'])) $event["FacebookLink"] = $_POST['FacebookLink'];
 		if(isset($_POST['YouTubeLink'])) $event["YouTubeLink"] = $_POST['YouTubeLink'];
 		if(isset($_POST['FlickrLink'])) $event["FlickrLink"] = $_POST['FlickrLink'];

@@ -30,8 +30,10 @@
  */
 class LocationsDatabaseHandler extends DatabaseHandler
 {
-	public function Locations($idUser, $format, $filters = null) {
-		$sql = "SELECT LocationId, Name, Address1, Address2, PostCode, City, Country, Phone, Email, Description, WebsiteLink, FacebookLink, FlickrLink, Active FROM Location WHERE UserId = $idUser AND Active = true ";
+	public function Locations($userId, $format, $filters = null) {
+		$userLocationsFolder = Settings::getInstance()->p['userLocationsFolder'];
+		
+		$sql = "SELECT LocationId, Name, Image, Address1, Address2, PostCode, City, Country, Phone, Email, Description, WebsiteLink, FacebookLink, FlickrLink, Active FROM Location WHERE UserId = $userId AND Active = true ";
 		
 		// Apply Filters
 		if($filters != null) {
@@ -49,9 +51,15 @@ class LocationsDatabaseHandler extends DatabaseHandler
 		
 		if($recordsCount >= 1 && $result != null) {
 			while($row = mysqli_fetch_array($result)) {
+				$imageThumbnailUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($userId, $row[Image], $userLocationsFolder, true) : "";
+				$imageUrl = (strlen($row[Image]) > 0) ? parent::GetImageUrl($userId, $row[Image], $userLocationsFolder, false) : "";
+				
 				$locations[] = array(
 					'LocationId' => intval($row['LocationId']),
 					'Name' => $row['Name'],
+					'Image' 	=> $row['Image'],
+					'ImageUrl' 	=> $imageUrl,
+					'ThumbnailUrl' => $imageThumbnailUrl,
 					'Address1' => $row['Address1'],
 					'Address2' => $row['Address2'],
 					'PostCode' => $row['PostCode'],
@@ -72,7 +80,9 @@ class LocationsDatabaseHandler extends DatabaseHandler
 	}
 	
 	public function LocationById($LocationId) {
-		$sql = "SELECT LocationId, Name, Address1, Address2, PostCode, City, Country, Description, Phone, Email, WebsiteLink, FacebookLink, FlickrLink, Active, UserId FROM Location WHERE LocationId = $LocationId";
+		$userLocationsFolder = Settings::getInstance()->p['userLocationsFolder'];
+		
+		$sql = "SELECT LocationId, Name, Image, Address1, Address2, PostCode, City, Country, Description, Phone, Email, WebsiteLink, FacebookLink, FlickrLink, Active, UserId FROM Location WHERE LocationId = $LocationId";
 
 		$result = $this->mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
@@ -81,9 +91,15 @@ class LocationsDatabaseHandler extends DatabaseHandler
 
 		if($recordsCount >= 1 && $result != null) {
 			$row = mysqli_fetch_array($result);
+			
+			$imageUrl = parent::GetImageUrl($row['UserId'], $row['Image'], $userLocationsFolder);
+			$imageThumbnailUrl = parent::GetImageUrl($row['UserId'], $row['Image'], $userLocationsFolder, true);
 
 			$data = array(	'LocationId' => intval($row['LocationId']),
 							'Name' => $row['Name'],
+							'Image' => $row['Image'],
+							'ImageUrl' => $imageUrl,
+							'ThumbnailUrl' => $imageThumbnailUrl,
 							'Address1' => $row['Address1'],
 							'Address2' => $row['Address2'],
 							'PostCode' => $row['PostCode'],

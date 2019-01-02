@@ -38,7 +38,7 @@ class DatabaseBase {
 	
 	function openConnection($settingsFile)
 	{
-		$xml = simplexml_load_file($settingsFile) or die("Error: Cannot create object");
+		$xml = simplexml_load_file($settingsFile) or die("Error: Cannot read object the database settings file");
 		
 		if ($xml === false) {
 			echo "Failed loading XML: ";
@@ -60,7 +60,7 @@ class DatabaseBase {
 			}
 			
 			// Change character set to utf8
-			mysqli_set_charset($this->_connection, "utf8");
+			mysqli_set_charset($this->_connection, "utf8mb4");
 		}
 	}
 	

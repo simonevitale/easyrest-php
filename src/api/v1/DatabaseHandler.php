@@ -47,33 +47,34 @@ class DatabaseHandler
 	 *  -1: wrong credentials
 	 *  -2: account not confirmed
 	 */
-	public function AuthenticateByEmail($email, $password) {
+	public function AuthenticateByEmail($email, $password, $checkIfAdmin = false, $checkUserState = false) {
 		global $authIssueText;
 		global $mysqli;
 	
-		$sql = "SELECT UserId, UserStateId FROM User WHERE Email = '$email' AND PasswordHash = '$password' ";
+		$sql = "SELECT UserId, UserStateId, RoleId FROM User WHERE Email = '$email' AND PasswordHash = '$password' ";
 		
 		$result = $mysqli->query($sql);
 		
 		$row = mysqli_fetch_array($result);
 		
 		if($row != null) {
-			if($row['UserStateId'] <= 0) return -2; // account not confirmed
-			if($row['UserStateId'] == 2) return -3; // account suspended
+			if($checkIfAdmin && $row['RoleId'] != 1) return -4; // Not an admin
+			if($checkUserState) {
+				if($row['UserStateId'] <= 0) return -2; // account not confirmed
+				if($row['UserStateId'] == 2) return -3; // account suspended
+			}
 			if($row['UserStateId'] == 1) return $row['UserId']; // valid auth
 		}
 		
 		return -1;
 	}
 	
-	function CheckAuthentication($throwException = true, $checkIfAdmin = false) {
-		// TODO: Implement "$checkIfAdmin"
-		
+	function CheckAuthentication($throwException = true, $checkIfAdmin = false, $checkIfItself = false) {
 		$userId = -1;
 		
 		if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']))
 		{
-			$userId = $this->AuthenticateByEmail($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+			$userId = $this->AuthenticateByEmail($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'], $checkIfAdmin, !$checkIfItself);
 		}
 
 		if($userId <= 0 && $throwException) {
@@ -102,6 +103,24 @@ class DatabaseHandler
 		}
 		
 		return true; // Authorized
+	}
+	
+	public function DeliverFile($filePath, $fileName) {
+		$fileinfo = finfo_open(FILEINFO_MIME_TYPE);
+		$contentType = finfo_file($fileinfo, $filePath);
+			
+		$whitelistImageType = array('image/jpeg', 'image/png', 'image/gif');
+		$isImage = in_array($contentType, $whitelistImageType);
+			
+		// Force file download if the it's not an image
+		$contentDisposition = "attachment";
+		if($isImage)
+			$contentDisposition = "inline";
+			
+		header("Content-Disposition: $contentDisposition; filename=\"$fileName\"");
+		header('Content-Type:'.$contentType);
+		header('Content-Length:'.filesize($filePath));
+		readfile($filePath);
 	}
 
 	public function GetFileUrl($userId, $image, $folder, $absolutePath = true, $pathOnly = false) {
@@ -182,19 +201,25 @@ class DatabaseHandler
 		return $jsonData;
 	}
 	
-	public function Countries() {
+	public function Countries($onlyName = true) {
 		global $mysqli;
 		
 		$jsonData = array();
 	
-		$sql = "SELECT Name FROM Country";
+		$sql = "SELECT CountryId, Name, Code, TimeZones FROM Country";
 
 		$result = $mysqli->query($sql);
 		$recordsCount = mysqli_num_rows($result);
 
 		if($recordsCount >= 1 && $result != null) {
 			while($row = mysqli_fetch_array($result)) {
-				$jsonData[] = $row['Name'];
+				$jsonData[] = ($onlyName) ? $row['Name'] :
+					array(
+						"Id" => $row['CountryId'],
+						"Name" => $row['Name'],
+						"Code" => $row['Code'],
+						"TimeZones" => $row['TimeZones']
+					);
 			}
 		}
 		
@@ -232,7 +257,7 @@ class DatabaseHandler
 		return ($recordsCount > 0);
 	}
 	
-	public function AppendLog($Action, $OrganizationName, $agent = "", $userEmail = "") {
+	public function AppendLog($Action, $agent = "", $agentVersion = "", $userEmail = "") {
 		global $authIssueText;
 		global $mysqli;
 		
@@ -250,7 +275,7 @@ class DatabaseHandler
 		$location = $info['country'] . ", " . $info['continent_code'];
 		
 		// gmdate("Y m d H:i:s")
-		$sql = "INSERT INTO Log (Action, OrganizationName, Agent, UserEmail, DateTime, Ip, Location) VALUES ('$Action', '$OrganizationName', '$agent', '$userEmail', '".time()."', '$ip', '$location')";
+		$sql = "INSERT INTO Log (Action, Agent, AgentVersion, UserEmail, DateTime, Ip, Location) VALUES ('$Action', '$agent', '$agentVersion', '$userEmail', '".time()."', '$ip', '$location')";
 	
 		$result = $mysqli->query($sql) or die ($authIssueText);
 	}
@@ -285,7 +310,11 @@ class DatabaseHandler
 	public function DeleteRecord($table, $userId, $recordId) {
 		global $authIssueText, $mysqli;
 	
-		$sql = "DELETE FROM $table WHERE UserId = $userId AND $table"."Id = $recordId";
+		$sql = "DELETE FROM $table WHERE ";
+		if($userId > 0)
+			$sql .= " UserId = $userId AND ";
+		$sql .= "$table"."Id = $recordId";
+		
 		$result = $mysqli->query($sql) or die ($authIssueText);
 		
 		return $result;

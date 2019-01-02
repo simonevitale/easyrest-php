@@ -54,7 +54,7 @@ class ArticlesController extends ArticlesDatabaseHandler
 		if(isset($_GET['published']) && $_GET['published'] != "") $filters[Published] = $_GET['published'];
 		if(isset($_GET['category']) && $_GET['category'] != "")   $filters[Category]  = $_GET['category'];
 		
-		if(isset($_GET['exceptCategory']) && $_GET['exceptCategory'] != "") $notFilters[Category] = $_GET['exceptCategory'];
+		if(isset($_GET['exceptCategory']) && $_GET['exceptCategory'] != "") $notFilters[ExceptCategory] = $_GET['exceptCategory'];
 		
 		if($authenticated == false || isset($_GET['userId'])) {
 			// If not authenticated shows only published articles
@@ -114,7 +114,7 @@ class ArticlesController extends ArticlesDatabaseHandler
 		
 		// Upload new image
 		if($isImageUploading == 1) {
-			$image = uploadImage($_FILES['NewImage'], $destinationDirectory, 350);
+			$image = uploadImage($_FILES['NewImageArticle'], $destinationDirectory, 350);
 		}
 		
 		$published = 0;
@@ -129,8 +129,8 @@ class ArticlesController extends ArticlesDatabaseHandler
 		if(isset($_POST['YouTubeLink'])) $article['YouTubeLink'] = $_POST['YouTubeLink'];
 		if(isset($_POST['FlickrLink'])) $article['FlickrLink'] = $_POST['FlickrLink'];
 		if(isset($_POST['Published'])) $article['Published'] = $published;
-		if($_POST['AuthorId'] != null && is_numeric($_POST['AuthorId']))
-			$article['AuthorId'] = $_POST['AuthorId'];
+		if($_POST['Author'] != null && is_numeric($_POST['Author']))
+			$article['AuthorId'] = $_POST['Author'];
 			
 		if($article['AuthorId'] === NULL) $article['AuthorId'] = 0;
 		
