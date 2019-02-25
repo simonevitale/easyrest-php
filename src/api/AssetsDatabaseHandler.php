@@ -1,7 +1,7 @@
 <?
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2016 Simone Vitale
+// Copyright (c) 2018 Simone Vitale
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,6 @@
 use \Jacwright\RestServer\RestException;
 
 require_once "./FilesDatabaseHandler.php";
-require_once "./PackagesDatabaseHandler.php";
 
 class AssetsDatabaseHandler extends DatabaseHandler
 {
@@ -91,7 +90,6 @@ class AssetsDatabaseHandler extends DatabaseHandler
 
 		if($recordsCount >= 1 && $result != null) {
 			$filesHandler = new FilesDatabaseHandler;
-			$packagesHandler = new PackagesDatabaseHandler;
 			
 			while($row = mysqli_fetch_array($result)) {
 				$assets[] = array (
@@ -101,8 +99,7 @@ class AssetsDatabaseHandler extends DatabaseHandler
 					'CreationDateTime' => $row['CreationDateTime'],
 					'Version' => $row['Version'],
 					'UserId' => $row['UserId'],
-					'Files' => $filesHandler->AssetFiles($row['AssetId']),
-					'Packages' => $packagesHandler->AssetPackagesByAssetId($row['AssetId'])
+					'Files' => $filesHandler->AssetFiles($row['AssetId'])
 				);
 			}
 		}
@@ -190,44 +187,6 @@ class AssetsDatabaseHandler extends DatabaseHandler
 		
 		$result = $this->mysqli->query($sql) or die ($authIssueText);
 	}
-	
-	//TODEL: duplicated
-	/*function AssetFilesByAssetId($assetId) {
-		$sql  = "SELECT File.FileId, FileType.Name AS FileType, FileRole.Name AS FileRole, File.OwnerUserId, File.OriginalFileName, File.FileName ";
-		$sql .= "FROM File, FileType, AssetFile, FileRole ";
-		$sql .= "WHERE File.FileTypeId = FileType.FileTypeId ";
-		$sql .= "AND File.FileId = AssetFile.FileId ";
-		$sql .= "AND FileRole.FileRoleId = AssetFile.FileRoleId ";
-		$sql .= "AND AssetFile.AssetId = $assetId";
-		
-		$result = $this->mysqli->query($sql);
-		$recordsCount = mysqli_num_rows($result);
-
-		$data = null;
-
-		if($recordsCount >= 1 && $result != null) {
-			$userAssetsFolder = Settings::getInstance()->p['userAssetsFolder'];
-			
-			$data = [];
-			
-			while($row = mysqli_fetch_array($result)) {
-			
-			$fileUrl = (strlen($row[OriginalFileName]) > 0) ? parent::GetFileUrl($row[OwnerUserId], $row[OriginalFileName], $userAssetsFolder, true) : "";
-			
-			$data[] = array('FileId' => $row['FileId'],
-							'FileType' => $row['FileType'],
-							'FileRole' => $row['FileRole'],
-							'IsPublic' => $row['IsPublic'],
-							//'CreationDateTime' => $row['CreationDateTime'],
-							'OriginalFileName' => $row['OriginalFileName'],
-							'FileName' => $row['FileName'],
-							'FileUrl' => $fileUrl, // Possibly not used anymore
-							'OwnerUserId' => $row['OwnerUserId']);
-			}
-		}
-		
-		return $data;
-	}*/
 	
 	function CheckIfOwned($userId, $assetId, $throwException = true) {
 		global $mysqli;

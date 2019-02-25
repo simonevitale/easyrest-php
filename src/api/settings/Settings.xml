@@ -23,4 +23,6 @@
 	
 	<defaultRoleId>1</defaultRoleId>
 	
+	<userPlaceholder>[PLACEHOLDER IMAGE]/placeholder.png</userPlaceholder>
+	
 </settings>

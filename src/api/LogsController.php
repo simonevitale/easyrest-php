@@ -76,3 +76,5 @@ class LogsController extends DatabaseHandler
 		return $logs;
     }
 }
+
+?>

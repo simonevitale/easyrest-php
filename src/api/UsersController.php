@@ -1,4 +1,4 @@
-<?php
+<?
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2016 Simone Vitale
@@ -27,6 +27,7 @@ use \Jacwright\RestServer\RestException;
 
 require_once("UsersDatabaseHandler.php");
 require_once("functions.php");
+require_once("./timezones.php");
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -56,8 +57,8 @@ class UsersController extends UsersDatabaseHandler
 		$mailer->Port = Settings::getInstance()->p['emailPort'];			// TCP port to connect to
 
 		$mailer->addAddress($email);
-		$mailer->addReplyTo($replyTo, 'SquizMaster');
-		$mailer->setFrom(Settings::getInstance()->p['email'], 'SquizMaster');
+		$mailer->addReplyTo($replyTo, $websiteName);
+		$mailer->setFrom(Settings::getInstance()->p['email'], $websiteName);
 
 		$mailer->isHTML(true);                                  			// Set email format to HTML
 		$mailer->Subject = $subject;
@@ -73,14 +74,23 @@ class UsersController extends UsersDatabaseHandler
 		
 		return "OK";
 	}
-	
+	   
 	/**
-     * Signs up a new user by e-mail
-     *
-     * @url GET /user/facebook/signup/
+     * Get World Timezones
+     * 
+     * @url GET /users/timezones
+     * @url GET /users/timezones/$code
      */
-    public function facebookSignUp() {
-		echo "OK";
+    public function getTimeZones($code = "") {
+		if($code != "") {
+			$code = strtoupper($code);
+			$timezone_identifiers = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $code);
+			$tzo = getTimeOffsetsByIdentifiers($timezone_identifiers);
+			
+			return $tzo;
+		}
+		
+		return getTimeOffsetsList();
 	}
 	
 	/**
@@ -103,9 +113,7 @@ class UsersController extends UsersDatabaseHandler
 		
 		if(strlen($email) == 0 || strlen($password) == 0) {
 			throw new RestException(400, "Wrong or missing parameters.");
-		} else if(strcmp($code, "") != 0 && strcmp($code, "AEGEE") != 0 && strcmp($code, "steam18") != 0 && strcmp($code, "friends") != 0) { // Check here if the code is valid
-			throw new RestException(412, "Code $_POST[code] not valid.");
-		}
+		} else
 		
 		if($language != "en" && $language != "it")
 			$language = "en";
@@ -125,16 +133,10 @@ class UsersController extends UsersDatabaseHandler
 			
 			// TODO: CONFIRM REGISTRATION TEMPORARILY DISABLED: USERS ARE ALREADY ACTIVE
 			$newUserId = parent::CreateUser($email, $password, $registrationCode, $countryId, $timeZone, $language, 2, $code, $organization, 1, $licenseId);
-		
-			if($newUserId > 0 && strcmp($code, "AEGEE") == 0) {
-				// Add Theme Asset for AEGEE
-				parent::AddAssetToUser(5, $newUserId); // Associate AEGEE Theme to the account
-				parent::AddAssetToUser(12, $newUserId); // Associate AEGEE Category to the account
-			}
-			
+					
 			// Html Template
 			$portalUrl = Settings::getInstance()->p['portalUrl'];
-			$newUserMessageHtml = file_get_contents('templates/sm-template.html');
+			$newUserMessageHtml = file_get_contents('templates/template.html');
 			if($language == "it")
 				$newUserMessageHtml = str_replace("{Content}", file_get_contents('templates/signup-it.html'), $newUserMessageHtml);
 			else
@@ -142,8 +144,8 @@ class UsersController extends UsersDatabaseHandler
 			$newUserMessageHtml = str_replace("{ConfirmAccount}", $messages[$language]["confirmAccount"], $newUserMessageHtml);
 			$newUserMessageHtml = str_replace("{ConfirmAccountUrl}", "$portalUrl/?action=ConfirmAccount&email=$email&code=$registrationCode", $newUserMessageHtml);
 			
-			$this->mailUser($email, $newUserMessageHtml, "SquizMaster");
-			$this->mailUser(Settings::getInstance()->p['email'], $email . " just signed up! ", "SquizMaster New User");
+			$this->mailUser($email, $newUserMessageHtml, $websiteName);
+			$this->mailUser(Settings::getInstance()->p['email'], $email . " just signed up! ", "$websiteName New User");
 		}
 		
 		return "OK";
@@ -155,6 +157,8 @@ class UsersController extends UsersDatabaseHandler
      * @url POST /user/contactus/
      */
 	public function contactUs() {
+		$websiteName = Settings::getInstance()->p['websiteName'];
+		
 		$name = $_POST["name"];
 		$eMailFrom = $_POST["email"];
 		$phone = $_POST["phone"];
@@ -166,7 +170,7 @@ class UsersController extends UsersDatabaseHandler
 		$message .= "<br />".rawurldecode($_POST["why"])."<br />";
 		$message .= "<br />".rawurldecode($_POST["message"]);
 		
-		$this->mailUserReply(Settings::getInstance()->p['email'], $message, "SquizMaster", $eMailFrom);
+		$this->mailUserReply(Settings::getInstance()->p['email'], $message, $websiteName, $eMailFrom);
 		
 		return "OK";
 	}
@@ -258,9 +262,11 @@ class UsersController extends UsersDatabaseHandler
      * @url GET /user/$userId/image
      */
     public function getUserImage($userId) {
+		$userPlaceholderPath = Settings::getInstance()->p['userPlaceholder'];
+		
 		$user = parent::UserById($userId);
 		
-		$placeholderPath = "../../assets/images/placeholder.png";
+		//$placeholderPath = "../../assets/images/placeholder.png";
 		
 		$userUserFolder = Settings::getInstance()->p['userUserFolder'];
 		$portalFolder = Settings::getInstance()->p['portalFolder'];
@@ -272,7 +278,7 @@ class UsersController extends UsersDatabaseHandler
 		if(file_exists($filePath)) {
 			parent::DeliverFile($filePath, $user["Image"]);
 		} else {
-			parent::DeliverFile($placeholderPath, "placeholder.png");
+			parent::DeliverFile($userPlaceholderPath, "placeholder.png");
 			//throw new RestException(404, "Image file not found.");
 		}
     }
@@ -306,14 +312,10 @@ class UsersController extends UsersDatabaseHandler
 			// Set the code in the database
 			parent::CreateResetPasswordCode($row['UserId'], $resetCode);
 			
-			//$forgotPasswordMessage = str_replace("<<IdUser>>", $row['UserId'], $messages[$row[1]]["forgotPasswordMessage"]);
-			//$forgotPasswordMessage = str_replace("<<ResetCode>>", $resetCode, $forgotPasswordMessage);
-			//$forgotPasswordMessage = str_replace("<<SendTo>>", $email, $forgotPasswordMessage);
-			
 			$language = $row['Language'];
 			
 			$portalUrl = Settings::getInstance()->p['portalUrl'];
-			$forgotPasswordMessage = file_get_contents('templates/sm-template.html');
+			$forgotPasswordMessage = file_get_contents('templates/template.html');
 			if($language == "it")
 				$forgotPasswordMessage = str_replace("{Content}", file_get_contents('templates/forgotpassword-it.html'), $forgotPasswordMessage);
 			else
@@ -322,7 +324,7 @@ class UsersController extends UsersDatabaseHandler
 			$forgotPasswordMessage = str_replace("{ForgotPassword}", $messages[$language]["forgotPassword"], $forgotPasswordMessage);
 			$forgotPasswordMessage = str_replace("{ForgotPasswordUrl}", "$portalUrl/?action=ResetPassword&iduser=$row[UserId]&code=$resetCode", $forgotPasswordMessage);
 			
-			$this->mailUser($email, $forgotPasswordMessage, "SquizMaster");
+			$this->mailUser($email, $forgotPasswordMessage, $websiteName);
 			
 			return "OK";
 		} else {
@@ -369,7 +371,7 @@ class UsersController extends UsersDatabaseHandler
 					$resetPasswordMessage = str_replace("<<NewPassword>>", $newPassword, $messages[$row[2]]["resetPasswordMessage"]);
 					$resetPasswordMessage = str_replace("<<SendTo>>", $sendTo, $resetPasswordMessage);
 					
-					$this->mailUser($sendTo, $resetPasswordMessage, "SquizMaster");
+					$this->mailUser($sendTo, $resetPasswordMessage, $websiteName);
 					
 					return "OK";
 				} else {
@@ -485,3 +487,5 @@ class UsersController extends UsersDatabaseHandler
 		}
 	}
 }
+
+?>

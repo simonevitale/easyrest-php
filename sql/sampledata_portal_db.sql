@@ -61,9 +61,9 @@ INSERT INTO `Role` (`RoleId`, `Description`) VALUES
 -- Data dump for table `User`
 --
 
-INSERT INTO `User` (`UserId`, `Email`, `Username`, `FirstName`, `LastName`, `Country`, `Salt`, `PasswordHash`, `RegistrationToken`, `RegistrationDateTime`, `LastLoginDateTime`, `PasswordResetToken`, `PasswordResetDateTime`, `UserStateId`, `LoginAttempts`, `MobilePhone`, `Language`, `RoleId`) VALUES
-(1, 'admin', 'admin', '', '', 'Great Britain', NULL, 'c4ca4238a0b923820dcc509a6f75849b', NULL, '1449749758', '1449749758', NULL, NULL, 1, 0, NULL, 'en', 1);
-(2, 'simone.vitale1987@gmail.com', 'simone.vitale', 'Simone', 'Vitale', 'Great Britain', NULL, 'c4ca4238a0b923820dcc509a6f75849b', NULL, '1449749758', '1449749758', NULL, NULL, 1, 0, NULL, 'it', 1);
+INSERT INTO `User` (`UserId`, `Email`, `Username`, `FirstName`, `LastName`, `CountryId`, `Salt`, `PasswordHash`, `RegistrationToken`, `RegistrationDateTime`, `LastLoginDateTime`, `PasswordResetToken`, `PasswordResetDateTime`, `UserStateId`, `LoginAttempts`, `MobilePhone`, `Language`, `RoleId`) VALUES
+(1, 'admin', 'admin', '', '', 1, NULL, 'c4ca4238a0b923820dcc509a6f75849b', NULL, '1449749758', '1449749758', NULL, NULL, 1, 0, NULL, 'en', 1);
+(2, 'simone.vitale1987@gmail.com', 'simone.vitale', 'Simone', 'Vitale', 226, NULL, 'c4ca4238a0b923820dcc509a6f75849b', NULL, '1449749758', '1449749758', NULL, NULL, 1, 0, NULL, 'it', 1);
 
 --
 -- Data dump for table `Country`

@@ -44,12 +44,10 @@ class Role {
 class License {
 	public $LicenseId	  = 0;
 	public $Name  	   = "";
-	public $MaxPlayers = null;
 	
-	public function __construct($id, $name, $maxPlayers) {
+	public function __construct($id, $name) {
         $this->LicenseId  = intval($id);
         $this->Name    = $name;
-		$this->MaxPlayers = intval($maxPlayers);
     }
 }
 
@@ -61,7 +59,9 @@ class UsersDatabaseHandler extends DatabaseHandler
 		$sql = "SELECT UserId, Email, Username, LastLoginDateTime, Organization, Role.Name AS Role, Country.Name AS Country FROM User ";
 		$sql .= "LEFT JOIN Country ON User.CountryId = Country.CountryId ";
 		$sql .= "LEFT JOIN Role ON User.RoleId = Role.RoleId ";
-		$sql .= "ORDER BY UserId LIMIT $from, $count";
+		$sql .= "ORDER BY UserId ";
+		if($from >= 0 && $count >= 0)
+			$sql .= "LIMIT $from, $count";
 
 		$result = $this->mysqli->query($sql) or die ($authIssueText);
 		$recordsCount = mysqli_num_rows($result);
@@ -92,7 +92,7 @@ class UsersDatabaseHandler extends DatabaseHandler
 
 		$sql = "SELECT UserId, Email, Username, FirstName, LastName, User.CountryId, TimeZone, Image, RegistrationDateTime, RegistrationCode, LastLoginDateTime, UserStateId, LoginAttempts, MobilePhone, Language, PortalLanguage, Properties, ";
 		$sql .= "Role.RoleId, Role.Name AS RoleName, Role.Modules AS RoleModules, ";
-		$sql .= "License.LicenseId, License.Name AS LicenseName, License.MaxPlayers AS LicenseMaxPlayers ";
+		$sql .= "License.LicenseId, License.Name AS LicenseName ";
 		$sql .= "FROM User ";
 		$sql .= "LEFT JOIN Country ON User.CountryId = Country.CountryId ";
 		$sql .= "LEFT JOIN Role ON User.RoleId = Role.RoleId ";
@@ -132,7 +132,7 @@ class UsersDatabaseHandler extends DatabaseHandler
 							'Language' => $row['Language'],
 							'PortalLanguage' => $row['PortalLanguage'],
 							'Role' => new Role($row['RoleId'], $row['RoleName'], $row['RoleModules']),
-							'License' => new License($row['LicenseId'], $row['LicenseName'], $row['LicenseMaxPlayers']),
+							'License' => new License($row['LicenseId'], $row['LicenseName']),
 							'Properties' => $row['Properties']);
 		}
 
@@ -250,6 +250,18 @@ class UsersDatabaseHandler extends DatabaseHandler
 	
 	function DeleteUserDb($userId) {
 		global $authIssueText;
+		
+		$user = $this->UserById($userId);
+		
+		// if($user != null) {
+			// $modules = explode(",", $user["Role"]["Modules"]);
+			
+			// foreach ($modules as $module) {
+				// $result = $this->mysqli->query("DELETE FROM Article WHERE UserId = $userId;") or die ($authIssueText);
+			// }
+			
+			// $result = $this->mysqli->query("DELETE FROM User WHERE UserId = $userId;") or die ($authIssueText);
+		// }
 		
 		$result = $this->mysqli->query("DELETE FROM Article WHERE UserId = $userId;") or die ($authIssueText);
 		$result = $this->mysqli->query("DELETE FROM Event WHERE UserId = $userId;") or die ($authIssueText);
